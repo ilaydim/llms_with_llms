@@ -1,0 +1,66 @@
+/* ============================================================
+   Tasarım Token Sistemi — "Learning LLMs with LLMs"
+   Konu: diyalog tabanlı, katmanlı (Teori→Uygulama→Eleştirel) öğrenme.
+   Yön: bir öğrenme defteri / araştırma transkripti hissi — ne soğuk bir
+   "chat ürünü" ne de klasik "kurumsal eğitim portalı". Diyaloğun kendisi
+   (öğrenci ↔ Tutor Agent) sayfanın ana materyali.
+   ============================================================ */
+
+:root {
+  /* Renk: soğuk, kağıt-benzeri zemin + derin mürekkep eflatun + iki konuşma sesi */
+  --color-paper: #EAEBF2;
+  --color-paper-raised: #FBFBFD;
+  --color-ink: #1F2238;
+  --color-ink-soft: #5C5F7A;
+  --color-ink-faint: #9295AC;
+  --color-border: #D6D8E4;
+  --color-border-strong: #B7BACD;
+
+  --color-accent: #C97A36;       /* aktif/ilerleme vurgusu — amber */
+  --color-accent-soft: #F3E2CC;
+  --color-tutor: #3E6F6B;        /* Tutor Agent sesi — teal */
+  --color-tutor-soft: #E2EDEB;
+  --color-critical: #A6503A;     /* Eleştirel Bakış katmanı vurgusu */
+  --color-critical-soft: #F1DFD8;
+
+  /* Tipografi */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-card: 0 1px 2px rgba(31, 34, 56, 0.06), 0 4px 16px rgba(31, 34, 56, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

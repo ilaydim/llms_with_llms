@@ -1,0 +1,6 @@
+llms_with_llms.db
+.env
+__pycache__/
+*.pyc
+chroma_store/
+.venv/
