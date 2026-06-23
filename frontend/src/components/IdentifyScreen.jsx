@@ -15,44 +15,43 @@ export default function IdentifyScreen({ onIdentified, loading, error }) {
       <div className="identify-card">
         <p className="identify-eyebrow">Learning LLMs with LLMs</p>
         <h1 className="identify-title">
-          Bir LLM'le diyalog kurarak, LLM'leri öğren.
+          Learn about LLMs by talking to one.
         </h1>
         <p className="identify-sub">
-          Bu pilot çalışmada RAG (Retrieval-Augmented Generation) konusunu üç
-          katmanda işleyeceksin: <strong>Teori</strong> → <strong>Uygulama</strong> →{" "}
-          <strong>Eleştirel Bakış</strong>. Başlamak için kendini tanıt — hesap
-          oluşturman gerekmiyor.
+          In this pilot study you will explore RAG (Retrieval-Augmented Generation)
+          across three layers: <strong>Theory</strong> → <strong>Application</strong> →{" "}
+          <strong>Critical Thinking</strong>. No account needed — just introduce yourself.
         </p>
 
         <form onSubmit={handleSubmit} className="identify-form">
           <label className="field">
-            <span>Adın</span>
+            <span>Your name</span>
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="örn. Ayşe Yılmaz"
+              placeholder="e.g. Alex Johnson"
               required
             />
           </label>
           <label className="field">
-            <span>Öğrenci numaran <em>(isteğe bağlı)</em></span>
+            <span>Student ID <em>(optional)</em></span>
             <input
               value={studentNo}
               onChange={(e) => setStudentNo(e.target.value)}
-              placeholder="örn. 20210101"
+              placeholder="e.g. 20210101"
             />
           </label>
 
           {error && <p className="identify-error">{error}</p>}
 
           <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? "Hazırlanıyor…" : "Öğrenmeye başla"}
+            {loading ? "Setting up…" : "Start learning"}
           </button>
         </form>
 
         <p className="identify-footnote">
-          Daha önce aynı isimle girdiysen, kaldığın yerden devam edeceksin.
+          If you've used this platform before with the same name, you'll resume where you left off.
         </p>
       </div>
     </div>

@@ -3,12 +3,15 @@ UC-2: Teori Katmanında LLM ile Diyalog Kurma (ve aynı mekanizma application/cr
 katmanları için de kullanılır — Bölüm 5.5).
 FR-3.2/3.3/3.4, FR-4.2, FR-5.2 burada karşılanır.
 """
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session as DBSession
 
 from app.agents.tutor_agent import TutorAgent
-from app.database import get_db
-from app.models.models import DialogueMessage, Module
+from app.database import SessionLocal, get_db
+from app.models.models import DialogueMessage, LayerProgress, Module
 from app.models.models import Session as SessionModel
 from app.schemas.dialogue import DialogueMessageIn, DialogueMessageOut, LayerIntroOut
 from app.services.session_activity import touch_session
@@ -83,6 +86,28 @@ def send_message(payload: DialogueMessageIn, db: DBSession = Depends(get_db)):
         for m in history_rows
     ]
 
+    # FR-7.2: Bu katmana ilk mesaj geliyorsa in_progress olarak işaretle
+    existing_progress = (
+        db.query(LayerProgress)
+        .filter(
+            LayerProgress.session_id == payload.session_id,
+            LayerProgress.module_id == module.id,
+            LayerProgress.layer == payload.layer,
+        )
+        .first()
+    )
+    if existing_progress is None:
+        db.add(LayerProgress(
+            session_id=payload.session_id,
+            module_id=module.id,
+            layer=payload.layer,
+            status="in_progress",
+        ))
+        db.commit()
+    elif existing_progress.status == "not_started":
+        existing_progress.status = "in_progress"
+        db.commit()
+
     # 1) Öğrenci mesajını kaydet
     student_msg = DialogueMessage(
         session_id=payload.session_id,
@@ -118,3 +143,100 @@ def send_message(payload: DialogueMessageIn, db: DBSession = Depends(get_db)):
     touch_session(db, session)
 
     return tutor_msg
+
+
+@router.post("/message/stream")
+def send_message_stream(payload: DialogueMessageIn):
+    """
+    NFR-1.1: SSE (Server-Sent Events) ile streaming cevap.
+    Frontend ilk chunk'ı < 3 saniyede alır.
+    DB session StreamingResponse generator içinde açılıp kapanır (dependency injection
+    streaming'de çalışmadığı için manuel yönetim gerekir).
+    """
+    def event_stream():
+        db = SessionLocal()
+        try:
+            module = db.query(Module).filter(Module.code == payload.module_code).first()
+            session = db.query(SessionModel).filter(SessionModel.id == payload.session_id).first()
+            if not module or not session:
+                yield f"data: {json.dumps({'error': 'Oturum veya modül bulunamadı'})}\n\n"
+                return
+
+            history_rows = (
+                db.query(DialogueMessage)
+                .filter(
+                    DialogueMessage.session_id == payload.session_id,
+                    DialogueMessage.module_id == module.id,
+                    DialogueMessage.layer == payload.layer,
+                )
+                .order_by(DialogueMessage.created_at.asc())
+                .all()
+            )
+            conversation_history = [
+                {"role": "user" if m.sender == "student" else "assistant", "content": m.content}
+                for m in history_rows
+            ]
+
+            # FR-7.2: in_progress işaretle
+            existing = (
+                db.query(LayerProgress)
+                .filter(
+                    LayerProgress.session_id == payload.session_id,
+                    LayerProgress.module_id == module.id,
+                    LayerProgress.layer == payload.layer,
+                )
+                .first()
+            )
+            if existing is None:
+                db.add(LayerProgress(
+                    session_id=payload.session_id,
+                    module_id=module.id,
+                    layer=payload.layer,
+                    status="in_progress",
+                ))
+                db.commit()
+            elif existing.status == "not_started":
+                existing.status = "in_progress"
+                db.commit()
+
+            # Öğrenci mesajını kaydet
+            db.add(DialogueMessage(
+                session_id=payload.session_id,
+                module_id=module.id,
+                layer=payload.layer,
+                sender="student",
+                content=payload.content,
+            ))
+            db.commit()
+
+            # Streaming: her chunk SSE formatında gönderilir
+            full_text = ""
+            for chunk in _tutor_agent.stream_respond(
+                module_code=payload.module_code,
+                layer=payload.layer,
+                conversation_history=conversation_history,
+                student_message=payload.content,
+            ):
+                full_text += chunk
+                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+
+            # Tam cevabı DB'ye kaydet
+            tutor_msg = DialogueMessage(
+                session_id=payload.session_id,
+                module_id=module.id,
+                layer=payload.layer,
+                sender="tutor_agent",
+                content=full_text,
+            )
+            db.add(tutor_msg)
+            db.commit()
+            db.refresh(tutor_msg)
+            touch_session(db, session)
+
+            yield f"data: {json.dumps({'done': True, 'message_id': tutor_msg.id, 'created_at': tutor_msg.created_at.isoformat()})}\n\n"
+        except Exception as exc:  # noqa: BLE001 — NFR-3.3: stack trace sızdırma
+            yield f"data: {json.dumps({'error': 'Bir hata oluştu, lütfen tekrar deneyin.'})}\n\n"
+        finally:
+            db.close()
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

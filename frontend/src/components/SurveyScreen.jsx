@@ -44,21 +44,21 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
     <div className="survey-screen">
       <div className="survey-card">
         <p className="identify-eyebrow">
-          {surveyType === "pre" ? "Başlangıç Anketi" : "Bitiş Anketi"}
+          {surveyType === "pre" ? "Pre-Study Survey" : "Post-Study Survey"}
         </p>
         <h1 className="identify-title">
           {surveyType === "pre"
-            ? "Başlamadan önce birkaç soru"
-            : "Harika, bitirdin! Son birkaç soru"}
+            ? "A few questions before you start"
+            : "Great work! A few final questions"}
         </h1>
         <p className="identify-sub">
           {surveyType === "pre"
-            ? "Bu kısa anket, öğrenmeye başlamadan önceki bilgi düzeyini ölçmek için — doğru/yanlış cevap yok."
-            : "Bu anket, öğrenme öncesi ve sonrası karşılaştırması için kullanılacak."}
+            ? "This short survey measures your baseline knowledge — there are no right or wrong answers."
+            : "This survey will be used to compare your knowledge before and after the module."}
         </p>
 
         {loading ? (
-          <p className="chat-status">Yükleniyor…</p>
+          <p className="chat-status">Loading…</p>
         ) : (
           <form onSubmit={handleSubmit} className="survey-form">
             {questions.map((q, i) => (
@@ -90,7 +90,7 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
                     rows={3}
                     value={answers[q.id] || ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
-                    placeholder="Cevabını buraya yaz…"
+                    placeholder="Write your answer here…"
                   />
                 )}
               </div>
@@ -99,7 +99,7 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
             {error && <p className="identify-error">{error}</p>}
 
             <button className="btn-primary" type="submit" disabled={!allAnswered || submitting}>
-              {submitting ? "Gönderiliyor…" : "Anketi Gönder"}
+              {submitting ? "Submitting…" : "Submit survey"}
             </button>
           </form>
         )}

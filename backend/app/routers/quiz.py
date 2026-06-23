@@ -10,7 +10,7 @@ from app.agents.evaluator_agent import EvaluatorAgent
 from app.agents.tutor_agent import TutorAgent
 from app.core.config import get_settings
 from app.database import get_db
-from app.models.models import DialogueMessage, Module, QuizResult, RevisitLog
+from app.models.models import DialogueMessage, LayerProgress, Module, QuizResult, RevisitLog
 from app.models.models import Session as SessionModel
 from app.schemas.quiz import (
     QuizMCQOut,
@@ -28,6 +28,26 @@ router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 _evaluator_agent = EvaluatorAgent()
 _tutor_agent = TutorAgent()
+
+
+def _mark_layer_completed(db: DBSession, session_id: int, module_id: int, layer: str) -> None:
+    """FR-7.2: Katmanı completed olarak işaretle (geçilince veya devam seçilince)."""
+    from datetime import datetime, timezone
+    row = (
+        db.query(LayerProgress)
+        .filter(
+            LayerProgress.session_id == session_id,
+            LayerProgress.module_id == module_id,
+            LayerProgress.layer == layer,
+        )
+        .first()
+    )
+    if row is None:
+        row = LayerProgress(session_id=session_id, module_id=module_id, layer=layer)
+        db.add(row)
+    row.status = "completed"
+    row.completed_at = datetime.now(timezone.utc)
+    db.commit()
 
 
 def _get_module(db: DBSession, module_code: str) -> Module:
@@ -115,6 +135,10 @@ def submit_quiz(payload: QuizSubmitIn, db: DBSession = Depends(get_db)):
     db.commit()
     db.refresh(result)
 
+    # FR-7.2: Quiz geçildiyse katmanı completed olarak işaretle
+    if passed:
+        _mark_layer_completed(db, payload.session_id, module.id, payload.layer)
+
     touch_session(db, session)
 
     return result
@@ -146,6 +170,8 @@ def revisit(payload: RevisitIn, db: DBSession = Depends(get_db)):
     db.commit()
 
     if not payload.revisited:
+        # FR-6.6 + FR-7.2: Devam et seçildi → katmanı completed olarak işaretle
+        _mark_layer_completed(db, payload.session_id, module.id, payload.layer)
         return RevisitOut(explanation=None)
 
     history_rows = (

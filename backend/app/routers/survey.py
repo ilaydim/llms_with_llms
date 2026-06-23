@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.database import get_db
 from app.models.models import Student, SurveyResponse
+from app.models.models import Session as SessionModel
 from app.schemas.survey import SurveyQuestionOut, SurveyStatusOut, SurveySubmitIn
+from app.services.session_activity import close_session
 from app.services.survey_loader import load_survey_questions
 
 router = APIRouter(prefix="/survey", tags=["survey"])
@@ -66,4 +68,16 @@ def submit_survey(payload: SurveySubmitIn, db: DBSession = Depends(get_db)):
             )
         )
     db.commit()
+
+    # Post-anket tamamlandığında öğrencinin en son açık oturumunu kapat (ended_at set et)
+    if payload.survey_type == "post":
+        latest_session = (
+            db.query(SessionModel)
+            .filter(SessionModel.student_id == payload.student_id, SessionModel.ended_at.is_(None))
+            .order_by(SessionModel.started_at.desc())
+            .first()
+        )
+        if latest_session:
+            close_session(db, latest_session.id)
+
     return {"status": "ok", "survey_type": payload.survey_type, "answer_count": len(payload.answers)}

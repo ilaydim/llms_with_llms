@@ -28,10 +28,10 @@ class TutorAgent:
         return [
             ToolDefinition(
                 name="search_documents",
-                description="RAG doküman koleksiyonunda anlamsal arama yapar ve en alakalı parçaları döner.",
+                description="Performs a semantic search over the RAG document collection (ChromaDB) and returns the most relevant chunks.",
                 input_schema={
                     "type": "object",
-                    "properties": {"query": {"type": "string", "description": "Aranacak soru/konu"}},
+                    "properties": {"query": {"type": "string", "description": "The question or topic to search for"}},
                     "required": ["query"],
                 },
                 handler=lambda args: search_documents(args.get("query", "")),
@@ -70,6 +70,26 @@ class TutorAgent:
             "tool_calls_made": response.tool_calls_made,
         }
 
+    def stream_respond(
+        self,
+        module_code: str,
+        layer: str,
+        conversation_history: list[dict[str, str]],
+        student_message: str,
+    ):
+        """NFR-1.1: respond() ile aynı mantık, text chunk'larını yield eder."""
+        module_config = load_module_config(module_code)
+        system_prompt = build_tutor_system_prompt(module_config, layer)
+        trimmed_history = conversation_history[-self._settings.max_context_messages:]
+        messages = trimmed_history + [{"role": "user", "content": student_message}]
+        tools = self._build_tools(layer)
+        yield from self._llm.generate_stream(
+            system_prompt=system_prompt,
+            messages=messages,
+            tools=tools,
+            temperature=0.7,
+        )
+
     def generate_layer_intro(self, module_code: str, layer: str) -> str:
         """
         FR-3.1: Teori katmanı girişi sabit metinden gelir (Tutor Agent tarafından
@@ -97,10 +117,9 @@ class TutorAgent:
         module_config = load_module_config(module_code)
         system_prompt = build_tutor_system_prompt(module_config, layer)
         instruction = (
-            "Öğrenci bu konunun quiz'inde başarısız oldu ve 'tekrar anlat' seçeneğini "
-            "seçti. Aynı konuyu, ÖNCEKİNDEN FARKLI bir anlatımla, daha basit kelimelerle "
-            "ve gerçek dünyadan somut bir örnekle yeniden anlat. Sonunda öğrenciye "
-            "şimdi anlayıp anlamadığını sor."
+            "The student did not pass this layer's quiz and chose 'explain again'. "
+            "Re-explain the same topic using a DIFFERENT approach from before — simpler language "
+            "and a concrete real-world example. At the end, ask the student whether it makes more sense now."
         )
         response = self._llm.generate(
             system_prompt=system_prompt,

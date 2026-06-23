@@ -4,17 +4,23 @@ import MessageBubble from "./MessageBubble";
 
 const LAYER_COPY = {
   theory: {
-    placeholder: "RAG hakkında merak ettiğini kendi cümlelerinle yaz…",
-    emptyLabel: "Teori",
+    placeholder: "Ask anything about RAG in your own words…",
+    emptyLabel: "Theory",
   },
   application: {
-    placeholder: "Görevle ilgili bir soru sor, Tutor Agent dokümanlarda arama yapacak…",
-    emptyLabel: "Uygulama",
+    placeholder: "Ask a question about the task — the Tutor Agent will search the documents…",
+    emptyLabel: "Application",
   },
   critical: {
-    placeholder: "RAG'in sınırları üzerine düşüncelerini paylaş…",
-    emptyLabel: "Eleştirel Bakış",
+    placeholder: "Share your thoughts on the limits and risks of RAG…",
+    emptyLabel: "Critical Thinking",
   },
+};
+
+const STEP_LABELS = {
+  1: "Formulate a question",
+  2: "Inspect the retrieved chunks",
+  3: "Evaluate retrieval quality",
 };
 
 export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz }) {
@@ -24,6 +30,8 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [error, setError] = useState("");
+  // FR-4.3: uygulama katmanı adım takibi
+  const [tasks, setTasks] = useState([]);
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -31,21 +39,26 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
     setLoadingHistory(true);
     setError("");
 
-    Promise.all([
+    const fetches = [
       api.getLayerIntro(moduleCode, layer),
       api.getHistory(sessionId, moduleCode, layer),
-    ])
-      .then(([introRes, historyRes]) => {
+    ];
+    // Uygulama katmanında task adımlarını da çek
+    if (layer === "application") {
+      fetches.push(api.getTasks(sessionId, moduleCode));
+    }
+
+    Promise.all(fetches)
+      .then(([introRes, historyRes, tasksRes]) => {
         if (cancelled) return;
         setIntro(introRes.intro_text);
         setMessages(historyRes);
+        setTasks(tasksRes || []);
       })
       .catch((e) => !cancelled && setError(e.message))
       .finally(() => !cancelled && setLoadingHistory(false));
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [sessionId, moduleCode, layer]);
 
   useEffect(() => {
@@ -59,35 +72,95 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
 
     setSending(true);
     setError("");
+    const studentTempId = `temp-student-${Date.now()}`;
+    const tutorTempId = `temp-tutor-${Date.now()}`;
+
     setMessages((prev) => [
       ...prev,
-      { id: `temp-${Date.now()}`, sender: "student", content, created_at: new Date().toISOString() },
+      { id: studentTempId, sender: "student", content, created_at: new Date().toISOString() },
+      // NFR-1.1: streaming balonu — chunk'lar geldikçe content güncellenir
+      { id: tutorTempId, sender: "tutor_agent", content: "", created_at: new Date().toISOString(), streaming: true },
     ]);
     setDraft("");
 
     try {
-      const tutorReply = await api.sendMessage({ sessionId, moduleCode, layer, content });
-      setMessages((prev) => [...prev, tutorReply]);
-    } catch (e) {
-      setError(e.message);
+      const meta = await api.sendMessageStream(
+        { sessionId, moduleCode, layer, content },
+        (chunk) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === tutorTempId ? { ...m, content: m.content + chunk } : m
+            )
+          );
+        }
+      );
+      // Stream bitti: geçici ID'yi gerçek mesaj verileriyle değiştir
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tutorTempId
+            ? { ...m, id: meta.message_id, created_at: meta.created_at, streaming: false }
+            : m
+        )
+      );
+    } catch (err) {
+      // Hata olursa streaming balonunu kaldır
+      setMessages((prev) => prev.filter((m) => m.id !== tutorTempId));
+      setError(err.message);
     } finally {
       setSending(false);
     }
   }
 
+  async function handleTaskToggle(task) {
+    const newStatus = task.status === "completed" ? "not_started" : "completed";
+    try {
+      const updated = await api.updateTask(task.id, newStatus);
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)));
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   const copy = LAYER_COPY[layer];
+  const allTasksDone = tasks.length > 0 && tasks.every((t) => t.status === "completed");
 
   return (
     <div className="chat-panel">
       <div className="chat-scroll" ref={scrollRef}>
         {loadingHistory ? (
-          <p className="chat-status">Yükleniyor…</p>
+          <p className="chat-status">Loading…</p>
         ) : (
           <>
             <div className="chat-intro">
-              <span className="chat-intro-label">{copy.emptyLabel} — Giriş</span>
+              <span className="chat-intro-label">{copy.emptyLabel} — Introduction</span>
               <p>{intro}</p>
             </div>
+
+            {/* FR-4.3: Uygulama katmanı adım checklist'i */}
+            {layer === "application" && tasks.length > 0 && (
+              <div className="task-checklist">
+                <p className="task-checklist-title">Task Steps</p>
+                {tasks.map((task) => (
+                  <label key={task.id} className={`task-item ${task.status === "completed" ? "task-item--done" : ""}`}>
+                    <input
+                      type="checkbox"
+                      checked={task.status === "completed"}
+                      onChange={() => handleTaskToggle(task)}
+                    />
+                    <span>
+                      <strong>{task.step_number}.</strong>{" "}
+                      {STEP_LABELS[task.step_number] || `Step ${task.step_number}`}
+                    </span>
+                  </label>
+                ))}
+                {allTasksDone && (
+                  <p className="task-checklist-done">
+                    All steps completed — you can now take the quiz.
+                  </p>
+                )}
+              </div>
+            )}
+
             {messages.map((m, i) => (
               <MessageBubble
                 key={m.id}
@@ -95,13 +168,15 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
                 content={m.content}
                 createdAt={m.created_at}
                 index={i + 1}
+                streaming={!!m.streaming}
               />
             ))}
-            {sending && (
+            {/* NFR-1.1: streaming aktifken "düşünüyor" yerine streaming balonu göster */}
+            {sending && !messages.some((m) => m.streaming) && (
               <div className="bubble-row bubble-row--tutor">
                 <div className="bubble bubble--pending">
                   <span className="bubble-tag">TUTOR</span>
-                  <p className="bubble-content bubble-content--pending">düşünüyor…</p>
+                  <p className="bubble-content bubble-content--pending">thinking…</p>
                 </div>
               </div>
             )}
@@ -119,10 +194,10 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
           disabled={sending || loadingHistory}
         />
         <button className="btn-primary" type="submit" disabled={sending || loadingHistory || !draft.trim()}>
-          Gönder
+          Send
         </button>
         <button type="button" className="btn-secondary" onClick={onStartQuiz} disabled={loadingHistory}>
-          Quiz'e geç
+          Take quiz
         </button>
       </form>
     </div>

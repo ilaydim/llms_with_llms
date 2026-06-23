@@ -13,13 +13,12 @@ import json
 from app.agents.llm_client import LLMClient, get_llm_client
 from app.services.module_loader import load_module_config
 
-EVALUATOR_SYSTEM_PROMPT = """Sen objektif bir değerlendirme asistanısın (Evaluator Agent).
-Görevin, bir öğrencinin açık uçlu soruya verdiği cevabı, sağlanan değerlendirme
-kriterlerine göre puanlamaktır. Kibar olmaya çalışma, öğretici olmaya çalışma —
-sadece tutarlı ve objektif değerlendir.
+EVALUATOR_SYSTEM_PROMPT = """You are an objective assessment assistant (Evaluator Agent).
+Your job is to score a student's open-ended answer against the provided evaluation criteria.
+Do not try to be polite or instructive — just evaluate consistently and objectively.
 
-SADECE aşağıdaki JSON formatında cevap ver, başka hiçbir şey yazma:
-{"basarili": true veya false, "puan": 0.0-1.0 arası bir sayı, "geri_bildirim": "kısa, yapıcı geri bildirim"}
+Respond ONLY in the following JSON format, nothing else:
+{"basarili": true or false, "puan": a number between 0.0 and 1.0, "geri_bildirim": "short, constructive feedback in English"}
 """
 
 

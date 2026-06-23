@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
-const LAYER_LABEL = { theory: "Teori", application: "Uygulama", critical: "Eleştirel Bakış" };
+const LAYER_LABEL = { theory: "Theory", application: "Application", critical: "Critical Thinking" };
 
 export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, onAdvanceLayer }) {
   const [quiz, setQuiz] = useState(null);
@@ -76,15 +76,15 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
     setOpenEndedAnswer("");
   }
 
-  if (loading) return <div className="quiz-screen"><p className="chat-status">Quiz yükleniyor…</p></div>;
-  if (!quiz) return <div className="quiz-screen"><p className="identify-error">{error || "Quiz bulunamadı."}</p></div>;
+  if (loading) return <div className="quiz-screen"><p className="chat-status">Loading quiz…</p></div>;
+  if (!quiz) return <div className="quiz-screen"><p className="identify-error">{error || "Quiz not found."}</p></div>;
 
   return (
     <div className="quiz-screen">
       <div className="quiz-card">
         <div className="quiz-header">
-          <span className="chat-intro-label">{LAYER_LABEL[layer]} — Katman Sonu Quiz'i</span>
-          <button className="quiz-back-link" onClick={onLeaveQuiz}>← Diyaloğa dön</button>
+          <span className="chat-intro-label">{LAYER_LABEL[layer]} — End-of-Layer Quiz</span>
+          <button className="quiz-back-link" onClick={onLeaveQuiz}>← Back to dialogue</button>
         </div>
 
         {!result && !revisitExplanation && (
@@ -118,14 +118,14 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
                 rows={4}
                 value={openEndedAnswer}
                 onChange={(e) => setOpenEndedAnswer(e.target.value)}
-                placeholder="Cevabını buraya yaz…"
+                placeholder="Write your answer here…"
               />
             </div>
 
             {error && <p className="identify-error">{error}</p>}
 
             <button className="btn-primary" type="submit" disabled={!canSubmit || submitting}>
-              {submitting ? "Değerlendiriliyor…" : "Quiz'i Gönder"}
+              {submitting ? "Evaluating…" : "Submit quiz"}
             </button>
           </form>
         )}
@@ -133,11 +133,11 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
         {result && !revisitExplanation && (
           <div className="quiz-result">
             <p className={`quiz-result-badge ${result.passed ? "quiz-result-badge--pass" : "quiz-result-badge--fail"}`}>
-              {result.passed ? "Geçtin" : "Henüz değil"}
+              {result.passed ? "Passed" : "Not yet"}
             </p>
             <p className="quiz-result-detail">
-              Çoktan seçmeli: %{Math.round(result.mcq_score * 100)} ·{" "}
-              Açık uçlu: %{Math.round((result.open_ended_score ?? 0) * 100)}
+              Multiple choice: {Math.round(result.mcq_score * 100)}% ·{" "}
+              Open-ended: {Math.round((result.open_ended_score ?? 0) * 100)}%
             </p>
             {result.open_ended_feedback && (
               <p className="quiz-result-feedback">{result.open_ended_feedback}</p>
@@ -145,17 +145,17 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
 
             {result.passed ? (
               <button className="btn-primary" onClick={onAdvanceLayer}>
-                Devam et →
+                Continue →
               </button>
             ) : (
               <div className="quiz-revisit-choice">
-                <p>Bu konuyu farklı bir anlatımla tekrar görmek ister misin?</p>
+                <p>Would you like to revisit this topic with a different explanation?</p>
                 <div className="quiz-revisit-buttons">
                   <button className="btn-secondary" onClick={() => handleRevisitChoice(false)}>
-                    Hayır, devam et
+                    No, continue anyway
                   </button>
                   <button className="btn-primary" onClick={() => handleRevisitChoice(true)}>
-                    Evet, tekrar anlat
+                    Yes, explain again
                   </button>
                 </div>
               </div>
@@ -165,11 +165,11 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
 
         {revisitExplanation && (
           <div className="quiz-result">
-            <p className="chat-intro-label">Yeni anlatım</p>
+            <p className="chat-intro-label">New explanation</p>
             <p className="quiz-revisit-text">{revisitExplanation}</p>
-            <p className="survey-question-text" style={{ marginTop: 16 }}>Şimdi anladın mı?</p>
+            <p className="survey-question-text" style={{ marginTop: 16 }}>Does that make more sense?</p>
             <button className="btn-primary" onClick={handleRetake}>
-              Evet, quiz'i tekrar dene
+              Yes, retake the quiz
             </button>
           </div>
         )}

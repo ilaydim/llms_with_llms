@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.database import Base, SessionLocal, engine
 from app.models.models import Module
-from app.routers import dialogue, quiz, sessions, students, survey
+from app.routers import dialogue, progress, quiz, sessions, students, survey, tasks
 
 settings = get_settings()
 
@@ -90,3 +90,5 @@ app.include_router(sessions.router)
 app.include_router(dialogue.router)
 app.include_router(quiz.router)
 app.include_router(survey.router)
+app.include_router(progress.router)
+app.include_router(tasks.router)

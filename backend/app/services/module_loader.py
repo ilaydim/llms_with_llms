@@ -33,18 +33,18 @@ def build_tutor_system_prompt(module_config: dict, layer: str) -> str:
     if layer == "theory":
         objectives = module_config["theory"].get("learning_objectives", [])
         layer_context = (
-            "Şu an Teori katmanındasın. Öğrencinin şu kazanımlara ulaşmasına yardımcı ol:\n- "
+            "You are currently in the Theory layer. Help the student achieve the following learning objectives:\n- "
             + "\n- ".join(objectives)
         )
     elif layer == "application":
         layer_context = (
-            "Şu an Uygulama katmanındasın. Görev: "
+            "You are currently in the Application layer. Task: "
             + module_config["application"]["task_description"]
-            + " Gerektiğinde search_documents aracını kullanarak retrieval'ı fiilen tetikle (FR-4.1)."
+            + " Use the search_documents tool when needed to actually trigger retrieval (FR-4.1)."
         )
     elif layer == "critical":
         layer_context = (
-            "Şu an Eleştirel Bakış katmanındasın. Tartışma başlangıcı: "
+            "You are currently in the Critical Thinking layer. Discussion starter: "
             + module_config["critical"]["discussion_starter"]
         )
 

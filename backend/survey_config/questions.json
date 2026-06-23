@@ -3,102 +3,102 @@
     {
       "id": "knowledge_rag_explain",
       "type": "likert",
-      "text": "RAG (Retrieval-Augmented Generation) kavramını başka birine açıklayabilirim.",
+      "text": "I can explain the concept of RAG (Retrieval-Augmented Generation) to someone else.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_embedding_retrieval",
       "type": "likert",
-      "text": "Embedding ve retrieval adımlarının bir LLM sisteminde nasıl çalıştığını anlıyorum.",
+      "text": "I understand how the embedding and retrieval steps work in an LLM system.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_rag_vs_finetuning",
       "type": "likert",
-      "text": "RAG ile fine-tuning arasındaki farkı açıklayabilirim.",
+      "text": "I can explain the difference between RAG and fine-tuning.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_rag_limitations",
       "type": "likert",
-      "text": "RAG'in halüsinasyonla ilişkisini ve genel sınırlarını açıklayabilirim.",
+      "text": "I can describe RAG's relationship to hallucination and its general limitations.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_llm_general",
       "type": "likert",
-      "text": "Genel olarak LLM'lerin nasıl çalıştığı konusunda kendimi bilgili hissediyorum.",
+      "text": "I feel knowledgeable about how LLMs work in general.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "open_prior_knowledge",
       "type": "open_ended",
-      "text": "RAG hakkında şu anda bildiklerini bir-iki cümleyle özetler misin? (Bilmiyorsan 'bilmiyorum' yazabilirsin.)"
+      "text": "In one or two sentences, summarise what you currently know about RAG. (If you don't know, just write 'I don't know'.)"
     }
   ],
   "post": [
     {
       "id": "knowledge_rag_explain",
       "type": "likert",
-      "text": "RAG (Retrieval-Augmented Generation) kavramını başka birine açıklayabilirim.",
+      "text": "I can explain the concept of RAG (Retrieval-Augmented Generation) to someone else.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_embedding_retrieval",
       "type": "likert",
-      "text": "Embedding ve retrieval adımlarının bir LLM sisteminde nasıl çalıştığını anlıyorum.",
+      "text": "I understand how the embedding and retrieval steps work in an LLM system.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_rag_vs_finetuning",
       "type": "likert",
-      "text": "RAG ile fine-tuning arasındaki farkı açıklayabilirim.",
+      "text": "I can explain the difference between RAG and fine-tuning.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_rag_limitations",
       "type": "likert",
-      "text": "RAG'in halüsinasyonla ilişkisini ve genel sınırlarını açıklayabilirim.",
+      "text": "I can describe RAG's relationship to hallucination and its general limitations.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "knowledge_llm_general",
       "type": "likert",
-      "text": "Genel olarak LLM'lerin nasıl çalıştığı konusunda kendimi bilgili hissediyorum.",
+      "text": "I feel knowledgeable about how LLMs work in general.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "experience_would_use_again",
       "type": "likert",
-      "text": "Bir LLM ile diyalog kurarak öğrenme yöntemini başka bir konuda tekrar kullanmak isterim.",
+      "text": "I would like to use this dialogue-based learning approach again for another topic.",
       "scale_min": 1,
       "scale_max": 5,
-      "scale_labels": ["Kesinlikle katılmıyorum", "Kesinlikle katılıyorum"]
+      "scale_labels": ["Strongly disagree", "Strongly agree"]
     },
     {
       "id": "open_experience_feedback",
       "type": "open_ended",
-      "text": "Bu platformla öğrenme deneyimini birkaç cümleyle değerlendirir misin? (Neyi sevdin, neyi değiştirirdin?)"
+      "text": "In a few sentences, how would you describe your learning experience with this platform? (What did you like? What would you change?)"
     }
   ]
 }

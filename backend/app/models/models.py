@@ -55,6 +55,7 @@ class Session(Base):
     application_tasks: Mapped[list["ApplicationTask"]] = relationship(back_populates="session")
     quiz_results: Mapped[list["QuizResult"]] = relationship(back_populates="session")
     revisit_logs: Mapped[list["RevisitLog"]] = relationship(back_populates="session")
+    layer_progress: Mapped[list["LayerProgress"]] = relationship(back_populates="session")
 
 
 class Module(Base):
@@ -147,3 +148,19 @@ class SurveyResponse(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     student: Mapped["Student"] = relationship(back_populates="survey_responses")
+
+
+class LayerProgress(Base):
+    """FR-7.2 — her katmandaki ilerleme durumu: not_started/in_progress/completed/abandoned."""
+
+    __tablename__ = "layer_progress"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id"), nullable=False)
+    module_id: Mapped[int] = mapped_column(ForeignKey("modules.id"), nullable=False)
+    layer: Mapped[str] = mapped_column(String, nullable=False)  # theory / application / critical
+    status: Mapped[str] = mapped_column(String, default="not_started")  # not_started/in_progress/completed/abandoned
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    session: Mapped["Session"] = relationship(back_populates="layer_progress")
