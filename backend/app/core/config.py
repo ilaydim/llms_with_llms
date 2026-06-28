@@ -16,8 +16,9 @@ class Settings(BaseSettings):
     llm_provider: str = "mock"
     anthropic_api_key: str = ""
     openai_api_key: str = ""
-    tutor_model: str = "claude-haiku-4-5-20251001"
-    evaluator_model: str = "claude-haiku-4-5-20251001"
+    groq_api_key: str = ""
+    tutor_model: str = "llama-3.3-70b-versatile"
+    evaluator_model: str = "llama-3.3-70b-versatile"
 
     # Veritabanı
     database_url: str = "sqlite:///./llms_with_llms.db"

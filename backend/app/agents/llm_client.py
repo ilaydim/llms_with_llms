@@ -236,6 +236,91 @@ class AnthropicLLMClient(LLMClient):
                 yield chunk
 
 
+class GroqLLMClient(LLMClient):
+    """Groq API implementasyonu — OpenAI-uyumlu arayüz üzerinden çalışır."""
+
+    def __init__(self, api_key: str, model: str):
+        from groq import Groq  # lazy import
+
+        self._client = Groq(api_key=api_key)
+        self._model = model
+
+    def generate(
+        self,
+        system_prompt: str,
+        messages: list[dict[str, str]],
+        tools: list[ToolDefinition] | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 1024,
+    ) -> LLMResponse:
+        groq_tools = None
+        tool_map = {}
+        if tools:
+            groq_tools = []
+            for t in tools:
+                groq_tools.append(
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": t.name,
+                            "description": t.description,
+                            "parameters": t.input_schema,
+                        },
+                    }
+                )
+                tool_map[t.name] = t.handler
+
+        conversation = [{"role": "system", "content": system_prompt}] + list(messages)
+        tool_calls_made: list[str] = []
+
+        for _ in range(5):
+            response = _with_retry(lambda: self._client.chat.completions.create(
+                model=self._model,
+                messages=conversation,
+                tools=groq_tools,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            ))
+            choice = response.choices[0]
+            if choice.finish_reason != "tool_calls":
+                return LLMResponse(text=choice.message.content or "", tool_calls_made=tool_calls_made, raw=response)
+
+            conversation.append(choice.message)
+            for call in choice.message.tool_calls:
+                import json as _json
+
+                tool_calls_made.append(call.function.name)
+                handler = tool_map.get(call.function.name)
+                args = _json.loads(call.function.arguments)
+                result_text = handler(args) if handler else "Araç bulunamadı."
+                conversation.append(
+                    {"role": "tool", "tool_call_id": call.id, "content": result_text}
+                )
+
+        return LLMResponse(text="(Araç döngüsü tamamlanamadı)", tool_calls_made=tool_calls_made)
+
+    def generate_stream(self, system_prompt, messages, tools=None, temperature=0.7, max_tokens=1024):
+        """Groq streaming — tool kullanılıyorsa önce tam cevap al, sonra chunk'la."""
+        if tools:
+            result = self.generate(system_prompt, messages, tools, temperature, max_tokens)
+            words = result.text.split(" ")
+            for i, word in enumerate(words):
+                yield word if i == len(words) - 1 else word + " "
+            return
+
+        stream = _with_retry(lambda: self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "system", "content": system_prompt}] + list(messages),
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=True,
+        ))
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+
+
 class OpenAILLMClient(LLMClient):
     """OpenAI API implementasyonu (seçilirse aktif olur)."""
 
@@ -313,4 +398,6 @@ def get_llm_client() -> LLMClient:
         return AnthropicLLMClient(api_key=settings.anthropic_api_key, model=settings.tutor_model)
     if provider == "openai":
         return OpenAILLMClient(api_key=settings.openai_api_key, model=settings.tutor_model)
+    if provider == "groq":
+        return GroqLLMClient(api_key=settings.groq_api_key, model=settings.tutor_model)
     return MockLLMClient()
