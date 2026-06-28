@@ -1,4 +1,6 @@
-const BASE_URL = "http://127.0.0.1:8000";
+// Local dev: Vite proxy forwards /students, /sessions, etc. to http://127.0.0.1:8000
+// Production: frontend is served by FastAPI at the same origin, so relative URLs work
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {

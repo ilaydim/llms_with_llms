@@ -80,3 +80,6 @@ logs/
 *.tmp
 .tmp/
 temp/
+
+# Data exports
+export/

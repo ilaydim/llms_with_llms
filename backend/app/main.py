@@ -4,10 +4,13 @@ Başlangıçta: (1) tabloları oluşturur, (2) modules_config/ klasöründeki
 yapılandırma dosyalarını okuyup `modules` tablosuna senkronize eder (FR-1.2).
 """
 import json
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 from app.database import Base, SessionLocal, engine
@@ -18,10 +21,13 @@ settings = get_settings()
 
 app = FastAPI(title="Learning LLMs with LLMs", version="0.1.0 (MVP)")
 
-# Faz 1: React frontend localhost'tan istek atacak.
+# CORS: local dev için (Vite dev server farklı portta çalışır).
+# Production'da frontend FastAPI'den servis edildiği için CORS gerekmez,
+# ama ALLOWED_ORIGINS env var ile production URL eklenebilir.
+_extra_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000"] + _extra_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,3 +98,19 @@ app.include_router(quiz.router)
 app.include_router(survey.router)
 app.include_router(progress.router)
 app.include_router(tasks.router)
+
+# Serve the built React frontend (production).
+# Build: cd frontend && npm run build
+# The dist/ folder sits one level above backend/.
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if _FRONTEND_DIST.exists():
+    _ASSETS_DIR = _FRONTEND_DIST / "assets"
+    if _ASSETS_DIR.exists():
+        app.mount("/assets", StaticFiles(directory=str(_ASSETS_DIR)), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str):
+        candidate = _FRONTEND_DIST / full_path
+        if candidate.is_file():
+            return FileResponse(str(candidate))
+        return FileResponse(str(_FRONTEND_DIST / "index.html"))
