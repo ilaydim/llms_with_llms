@@ -24,13 +24,13 @@ export const api = {
   startSession: (studentId) =>
     request(`/sessions/start/${studentId}`, { method: "POST" }),
 
-  getLayerIntro: (moduleCode, layer) =>
-    request(`/dialogue/${moduleCode}/${layer}/intro`),
+  getLayerIntro: (moduleCode, layer, lang = "en") =>
+    request(`/dialogue/${moduleCode}/${layer}/intro?lang=${lang}`),
 
   getHistory: (sessionId, moduleCode, layer) =>
     request(`/dialogue/${sessionId}/${moduleCode}/${layer}/history`),
 
-  sendMessage: ({ sessionId, moduleCode, layer, content }) =>
+  sendMessage: ({ sessionId, moduleCode, layer, content, lang = "en" }) =>
     request("/dialogue/message", {
       method: "POST",
       body: JSON.stringify({
@@ -38,12 +38,13 @@ export const api = {
         module_code: moduleCode,
         layer,
         content,
+        lang,
       }),
     }),
 
   getSurveyStatus: (studentId) => request(`/survey/status/${studentId}`),
 
-  getSurveyQuestions: (surveyType) => request(`/survey/questions/${surveyType}`),
+  getSurveyQuestions: (surveyType, lang = "en") => request(`/survey/questions/${surveyType}?lang=${lang}`),
 
   submitSurvey: (studentId, surveyType, answers) =>
     request("/survey/submit", {
@@ -51,9 +52,9 @@ export const api = {
       body: JSON.stringify({ student_id: studentId, survey_type: surveyType, answers }),
     }),
 
-  getQuiz: (moduleCode, layer) => request(`/quiz/${moduleCode}/${layer}`),
+  getQuiz: (moduleCode, layer, lang = "en") => request(`/quiz/${moduleCode}/${layer}?lang=${lang}`),
 
-  submitQuiz: ({ sessionId, moduleCode, layer, mcqAnswers, openEndedAnswer }) =>
+  submitQuiz: ({ sessionId, moduleCode, layer, mcqAnswers, openEndedAnswer, lang = "en" }) =>
     request("/quiz/submit", {
       method: "POST",
       body: JSON.stringify({
@@ -62,13 +63,14 @@ export const api = {
         layer,
         mcq_answers: mcqAnswers,
         open_ended_answer: openEndedAnswer,
+        lang,
       }),
     }),
 
-  submitRevisit: ({ sessionId, moduleCode, layer, revisited }) =>
+  submitRevisit: ({ sessionId, moduleCode, layer, revisited, lang = "en" }) =>
     request("/quiz/revisit", {
       method: "POST",
-      body: JSON.stringify({ session_id: sessionId, module_code: moduleCode, layer, revisited }),
+      body: JSON.stringify({ session_id: sessionId, module_code: moduleCode, layer, revisited, lang }),
     }),
 
   getStudentProgress: (studentId) => request(`/progress/student/${studentId}`),
@@ -86,13 +88,13 @@ export const api = {
    * onChunk(text) her chunk geldiğinde çağrılır.
    * Dönen Promise { message_id, created_at } ile resolve olur.
    */
-  sendMessageStream: ({ sessionId, moduleCode, layer, content }, onChunk) => {
+  sendMessageStream: ({ sessionId, moduleCode, layer, content, lang = "en" }, onChunk) => {
     return new Promise(async (resolve, reject) => {
       try {
         const res = await fetch(`${BASE_URL}/dialogue/message/stream`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, module_code: moduleCode, layer, content }),
+          body: JSON.stringify({ session_id: sessionId, module_code: moduleCode, layer, content, lang }),
         });
 
         if (!res.ok) {

@@ -112,13 +112,16 @@ class MockLLMClient(LLMClient):
         last_user_msg = next(
             (m["content"] for m in reversed(messages) if m["role"] == "user"), ""
         )
+        # Tutor/Evaluator sistem promptlarına eklenen dil talimatından hedef dili tespit et
+        is_turkish = "feedback in Turkish" in system_prompt or "only in Turkish" in system_prompt
 
         # EvaluatorAgent expects JSON — detect from system prompt and return a compatible response
         if "Evaluator Agent" in system_prompt or '"basarili"' in system_prompt:
+            feedback = "(Sahte değerlendirme) Cevap yeterli görünüyor." if is_turkish else "(Mock evaluation) The answer looks sufficient."
             reply = _json.dumps({
                 "basarili": True,
                 "puan": 0.75,
-                "geri_bildirim": "(Mock evaluation) The answer looks sufficient.",
+                "geri_bildirim": feedback,
             }, ensure_ascii=False)
             return LLMResponse(text=reply)
 
@@ -128,15 +131,25 @@ class MockLLMClient(LLMClient):
             # her zaman bir kere çağırıp sonucu cevaba ekler.
             tool = tools[0]
             tool_result = tool.handler({"query": last_user_msg})
-            tool_note = f"\n\n[{tool.name} aracı çağrıldı] → {tool_result}"
+            tool_label = "aracı çağrıldı" if is_turkish else "tool called"
+            tool_note = f"\n\n[{tool.name} {tool_label}] → {tool_result}"
 
-        reply = (
-            "(Mock Tutor Agent — no real LLM API connected yet)\n"
-            f'I received your message: "{last_user_msg}"\n'
-            "Once a real API is connected, you will see a natural-language response "
-            "grounded in the module content."
-            f"{tool_note}"
-        )
+        if is_turkish:
+            reply = (
+                "(Sahte Öğretici Ajan — henüz gerçek bir LLM API'sine bağlı değil)\n"
+                f'Mesajını aldım: "{last_user_msg}"\n'
+                "Gerçek bir API bağlandığında, modül içeriğine dayanan doğal dilde "
+                "bir cevap göreceksin."
+                f"{tool_note}"
+            )
+        else:
+            reply = (
+                "(Mock Tutor Agent — no real LLM API connected yet)\n"
+                f'I received your message: "{last_user_msg}"\n'
+                "Once a real API is connected, you will see a natural-language response "
+                "grounded in the module content."
+                f"{tool_note}"
+            )
         return LLMResponse(text=reply, tool_calls_made=[t.name for t in (tools or [])[:1] if tool_note])
 
     def generate_stream(self, system_prompt, messages, tools=None, temperature=0.7, max_tokens=1024):

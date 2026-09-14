@@ -11,14 +11,14 @@ hedeflenir (Bölüm 5.2).
 import json
 
 from app.agents.llm_client import LLMClient, get_llm_client
-from app.services.module_loader import load_module_config
+from app.services.module_loader import DEFAULT_LANGUAGE, LANGUAGE_NAMES, get_module_content, load_module_config
 
 EVALUATOR_SYSTEM_PROMPT = """You are an objective assessment assistant (Evaluator Agent).
 Your job is to score a student's open-ended answer against the provided evaluation criteria.
 Do not try to be polite or instructive — just evaluate consistently and objectively.
 
 Respond ONLY in the following JSON format, nothing else:
-{"basarili": true or false, "puan": a number between 0.0 and 1.0, "geri_bildirim": "short, constructive feedback in English"}
+{{"basarili": true or false, "puan": a number between 0.0 and 1.0, "geri_bildirim": "short, constructive feedback in {language_name}"}}
 """
 
 
@@ -27,10 +27,16 @@ class EvaluatorAgent:
         self._llm = llm_client or get_llm_client()
 
     def evaluate_open_ended(
-        self, module_code: str, layer: str, question_id: str, student_answer: str
+        self,
+        module_code: str,
+        layer: str,
+        question_id: str,
+        student_answer: str,
+        lang: str = DEFAULT_LANGUAGE,
     ) -> dict:
         module_config = load_module_config(module_code)
-        open_ended = module_config["quiz"][layer]["open_ended"]
+        content = get_module_content(module_config, lang)
+        open_ended = content["quiz"][layer]["open_ended"]
 
         if open_ended["id"] != question_id:
             raise ValueError(f"Soru ID uyuşmuyor: {question_id}")
@@ -41,8 +47,9 @@ class EvaluatorAgent:
             f"Öğrencinin cevabı: {student_answer}"
         )
 
+        language_name = LANGUAGE_NAMES.get(lang, LANGUAGE_NAMES[DEFAULT_LANGUAGE])
         response = self._llm.generate(
-            system_prompt=EVALUATOR_SYSTEM_PROMPT,
+            system_prompt=EVALUATOR_SYSTEM_PROMPT.format(language_name=language_name),
             messages=[{"role": "user", "content": user_message}],
             temperature=0.0,  # Tutarlı/objektif puanlama için düşük temperature
             max_tokens=300,

@@ -7,11 +7,12 @@ from app.core.config import get_settings
 
 
 @lru_cache
-def load_survey_questions(survey_type: str) -> list[dict]:
+def load_survey_questions(survey_type: str, lang: str = "en") -> list[dict]:
     settings = get_settings()
     config_path = Path(settings.survey_config_dir) / "questions.json"
     with open(config_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     if survey_type not in data:
         raise ValueError(f"Bilinmeyen anket tipi: {survey_type}")
-    return data[survey_type]
+    by_lang = data[survey_type]
+    return by_lang.get(lang) or by_lang["en"]

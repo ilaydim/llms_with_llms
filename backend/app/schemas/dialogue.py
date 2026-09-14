@@ -8,6 +8,7 @@ class DialogueMessageIn(BaseModel):
     module_code: str
     layer: str  # theory / application / critical
     content: str
+    lang: str = "en"  # en / tr — Tutor Agent'ın cevap dili
 
 
 class DialogueMessageOut(BaseModel):

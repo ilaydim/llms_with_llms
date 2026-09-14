@@ -12,7 +12,12 @@ FR-3.2/3.3/3.5, FR-4.1, FR-5.1/5.2 burada karşılanır.
 from app.agents.llm_client import LLMClient, ToolDefinition, get_llm_client
 from app.core.config import get_settings
 from app.services.document_search import search_documents
-from app.services.module_loader import build_tutor_system_prompt, load_module_config
+from app.services.module_loader import (
+    DEFAULT_LANGUAGE,
+    build_tutor_system_prompt,
+    get_module_content,
+    load_module_config,
+)
 
 
 class TutorAgent:
@@ -44,6 +49,7 @@ class TutorAgent:
         layer: str,
         conversation_history: list[dict[str, str]],
         student_message: str,
+        lang: str = DEFAULT_LANGUAGE,
     ) -> dict:
         """
         conversation_history: [{"role": "user"/"assistant", "content": "..."}]
@@ -51,7 +57,7 @@ class TutorAgent:
         settings.max_context_messages ile sınırlanır.)
         """
         module_config = load_module_config(module_code)
-        system_prompt = build_tutor_system_prompt(module_config, layer)
+        system_prompt = build_tutor_system_prompt(module_config, layer, lang)
 
         trimmed_history = conversation_history[-self._settings.max_context_messages :]
         messages = trimmed_history + [{"role": "user", "content": student_message}]
@@ -76,10 +82,11 @@ class TutorAgent:
         layer: str,
         conversation_history: list[dict[str, str]],
         student_message: str,
+        lang: str = DEFAULT_LANGUAGE,
     ):
         """NFR-1.1: respond() ile aynı mantık, text chunk'larını yield eder."""
         module_config = load_module_config(module_code)
-        system_prompt = build_tutor_system_prompt(module_config, layer)
+        system_prompt = build_tutor_system_prompt(module_config, layer, lang)
         trimmed_history = conversation_history[-self._settings.max_context_messages:]
         messages = trimmed_history + [{"role": "user", "content": student_message}]
         tools = self._build_tools(layer)
@@ -90,7 +97,7 @@ class TutorAgent:
             temperature=0.7,
         )
 
-    def generate_layer_intro(self, module_code: str, layer: str) -> str:
+    def generate_layer_intro(self, module_code: str, layer: str, lang: str = DEFAULT_LANGUAGE) -> str:
         """
         FR-3.1: Teori katmanı girişi sabit metinden gelir (Tutor Agent tarafından
         ÜRETİLMEZ) — bu fonksiyon o kuralı uygular, sadece config'ten okuyup döner.
@@ -98,16 +105,21 @@ class TutorAgent:
         başlangıç metnini döner.
         """
         module_config = load_module_config(module_code)
+        content = get_module_content(module_config, lang)
         if layer == "theory":
-            return module_config["theory"]["intro_text"]
+            return content["theory"]["intro_text"]
         if layer == "application":
-            return module_config["application"]["task_description"]
+            return content["application"]["task_description"]
         if layer == "critical":
-            return module_config["critical"]["discussion_starter"]
+            return content["critical"]["discussion_starter"]
         raise ValueError(f"Bilinmeyen katman: {layer}")
 
     def generate_simplified_explanation(
-        self, module_code: str, layer: str, conversation_history: list[dict[str, str]]
+        self,
+        module_code: str,
+        layer: str,
+        conversation_history: list[dict[str, str]],
+        lang: str = DEFAULT_LANGUAGE,
     ) -> str:
         """
         FR-6.5: Mastery learning'de quiz geçilemediğinde, aynı konunun daha basit,
@@ -115,7 +127,7 @@ class TutorAgent:
         Tutor Agent tarafından dinamik üretilir).
         """
         module_config = load_module_config(module_code)
-        system_prompt = build_tutor_system_prompt(module_config, layer)
+        system_prompt = build_tutor_system_prompt(module_config, layer, lang)
         instruction = (
             "The student did not pass this layer's quiz and chose 'explain again'. "
             "Re-explain the same topic using a DIFFERENT approach from before — simpler language "

@@ -21,7 +21,7 @@ from app.schemas.quiz import (
     RevisitIn,
     RevisitOut,
 )
-from app.services.module_loader import load_module_config
+from app.services.module_loader import get_module_content, load_module_config
 from app.services.session_activity import touch_session
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -58,11 +58,12 @@ def _get_module(db: DBSession, module_code: str) -> Module:
 
 
 @router.get("/{module_code}/{layer}", response_model=QuizQuestionsOut)
-def get_quiz(module_code: str, layer: str):
+def get_quiz(module_code: str, layer: str, lang: str = "en"):
     """FR-6.1: Çoğunlukla çoktan seçmeli + bir açık uçlu soru döner (correct_index hariç)."""
     try:
         module_config = load_module_config(module_code)
-        quiz = module_config["quiz"][layer]
+        content = get_module_content(module_config, lang)
+        quiz = content["quiz"][layer]
     except (FileNotFoundError, KeyError) as e:
         raise HTTPException(status_code=404, detail=f"Quiz bulunamadı: {e}")
 
@@ -81,8 +82,9 @@ def submit_quiz(payload: QuizSubmitIn, db: DBSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Oturum bulunamadı")
 
     module_config = load_module_config(payload.module_code)
+    content = get_module_content(module_config, payload.lang)
     try:
-        quiz_def = module_config["quiz"][payload.layer]
+        quiz_def = content["quiz"][payload.layer]
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Bu katman için quiz tanımlı değil: {payload.layer}")
 
@@ -103,6 +105,7 @@ def submit_quiz(payload: QuizSubmitIn, db: DBSession = Depends(get_db)):
         layer=payload.layer,
         question_id=quiz_def["open_ended"]["id"],
         student_answer=payload.open_ended_answer,
+        lang=payload.lang,
     )
 
     settings = get_settings()
@@ -190,7 +193,10 @@ def revisit(payload: RevisitIn, db: DBSession = Depends(get_db)):
     ]
 
     explanation = _tutor_agent.generate_simplified_explanation(
-        module_code=payload.module_code, layer=payload.layer, conversation_history=conversation_history
+        module_code=payload.module_code,
+        layer=payload.layer,
+        conversation_history=conversation_history,
+        lang=payload.lang,
     )
 
     db.add(

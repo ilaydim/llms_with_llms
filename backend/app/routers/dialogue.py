@@ -36,10 +36,10 @@ def _get_session(db: DBSession, session_id: int) -> SessionModel:
 
 
 @router.get("/{module_code}/{layer}/intro", response_model=LayerIntroOut)
-def get_layer_intro(module_code: str, layer: str):
+def get_layer_intro(module_code: str, layer: str, lang: str = "en"):
     """FR-3.1: Teori katmanı girişi sabit metinden gelir, dinamik üretilmez."""
     try:
-        intro_text = _tutor_agent.generate_layer_intro(module_code, layer)
+        intro_text = _tutor_agent.generate_layer_intro(module_code, layer, lang=lang)
     except (FileNotFoundError, ValueError, KeyError) as e:
         raise HTTPException(status_code=404, detail=str(e))
     return LayerIntroOut(layer=layer, intro_text=intro_text)
@@ -125,6 +125,7 @@ def send_message(payload: DialogueMessageIn, db: DBSession = Depends(get_db)):
         layer=payload.layer,
         conversation_history=conversation_history,
         student_message=payload.content,
+        lang=payload.lang,
     )
 
     # 3) Tutor cevabını kaydet
@@ -216,6 +217,7 @@ def send_message_stream(payload: DialogueMessageIn):
                 layer=payload.layer,
                 conversation_history=conversation_history,
                 student_message=payload.content,
+                lang=payload.lang,
             ):
                 full_text += chunk
                 yield f"data: {json.dumps({'chunk': chunk})}\n\n"

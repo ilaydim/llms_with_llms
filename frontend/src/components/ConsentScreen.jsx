@@ -1,56 +1,46 @@
 import { useState } from "react";
+import { useLanguage } from "../i18n";
+import LanguageSwitch from "./LanguageSwitch";
 
 export default function ConsentScreen({ onConsented }) {
   const [checked, setChecked] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="identify-screen">
       <div className="identify-card consent-card">
-        <p className="identify-eyebrow">Learning LLMs with LLMs</p>
-        <h1 className="identify-title">Participant Information & Consent</h1>
+        <LanguageSwitch />
+        <p className="identify-eyebrow">{t("app.brand")}</p>
+        <h1 className="identify-title">{t("consent.title")}</h1>
 
         <div className="consent-body">
-          <p className="consent-section-title">About this study</p>
+          <p className="consent-section-title">{t("consent.about.title")}</p>
+          <p>{t("consent.about.body")}</p>
+
+          <p className="consent-section-title">{t("consent.whatYouWillDo.title")}</p>
           <p>
-            You are invited to participate in a research study examining whether
-            dialogue-based interaction with a Large Language Model (LLM) helps
-            undergraduate software engineering students learn about LLM concepts.
-            This study is conducted as part of an academic research project.
+            {t("consent.whatYouWillDo.body1")} <strong>RAG (Retrieval-Augmented Generation)</strong>{" "}
+            {t("consent.whatYouWillDo.body2")}
           </p>
 
-          <p className="consent-section-title">What you will do</p>
-          <p>
-            You will work through the <strong>RAG (Retrieval-Augmented Generation)</strong> module
-            across three layers — Theory, Application, and Critical Thinking — by chatting
-            with a Tutor Agent. At the end of each layer you will take a short quiz.
-            A brief survey is administered before and after the module.
-          </p>
-
-          <p className="consent-section-title">Data collection</p>
-          <p>
-            The following data will be collected and stored:
-          </p>
+          <p className="consent-section-title">{t("consent.data.title")}</p>
+          <p>{t("consent.data.intro")}</p>
           <ul className="consent-list">
-            <li>Your name and optional student ID (for matching pre/post data only)</li>
-            <li>Your dialogue messages with the Tutor Agent</li>
-            <li>Your quiz answers and scores</li>
-            <li>Your pre- and post-survey responses</li>
-            <li>Session duration and layer progress</li>
+            <li>{t("consent.data.item1")}</li>
+            <li>{t("consent.data.item2")}</li>
+            <li>{t("consent.data.item3")}</li>
+            <li>{t("consent.data.item4")}</li>
+            <li>{t("consent.data.item5")}</li>
           </ul>
 
-          <p className="consent-section-title">Confidentiality</p>
+          <p className="consent-section-title">{t("consent.confidentiality.title")}</p>
           <p>
-            All data will be used <strong>for research purposes only</strong> and will not be
-            shared with third parties. Your responses will be reported anonymously in
-            aggregate form. No grades or academic penalties are associated with your
-            participation or performance.
+            {t("consent.confidentiality.body1")} <strong>{t("consent.confidentiality.emphasis")}</strong>{" "}
+            {t("consent.confidentiality.body2")}
           </p>
 
-          <p className="consent-section-title">Voluntary participation</p>
-          <p>
-            Participation is entirely voluntary. You may withdraw at any time without
-            consequence by simply closing the browser tab.
-          </p>
+          <p className="consent-section-title">{t("consent.voluntary.title")}</p>
+          <p>{t("consent.voluntary.body")}</p>
         </div>
 
         <label className="consent-checkbox-row">
@@ -60,8 +50,7 @@ export default function ConsentScreen({ onConsented }) {
             onChange={(e) => setChecked(e.target.checked)}
           />
           <span>
-            I have read the information above and <strong>I agree</strong> to participate
-            in this study.
+            {t("consent.checkbox.pre")} <strong>{t("consent.checkbox.emphasis")}</strong>{t("consent.checkbox.post")}
           </span>
         </label>
 
@@ -70,7 +59,7 @@ export default function ConsentScreen({ onConsented }) {
           onClick={onConsented}
           disabled={!checked}
         >
-          Continue
+          {t("consent.continue")}
         </button>
       </div>
     </div>

@@ -2,136 +2,277 @@
   "code": "rag",
   "name": "RAG (Retrieval-Augmented Generation)",
   "phase": 1,
-  "tutor_persona": "You are a Tutor Agent teaching undergraduate software engineering students about RAG (Retrieval-Augmented Generation). ONLY discuss topics within the scope of RAG: its theory, application, and critical limitations. If the conversation drifts outside RAG, gently redirect the student back to the topic without elaborating on the off-topic question (FR-3.5). Keep your answers open-ended, conversational, and appropriate for the student's level.",
 
-  "theory": {
-    "intro_text": "RAG (Retrieval-Augmented Generation) is an architecture that allows an LLM to retrieve relevant chunks from an external document collection — such as a knowledge base or corpus — and use them as context when generating a response. This way the model can access information that was not in its training data or is out of date, and it reduces the risk of hallucination. The basic flow is: (1) the student/user asks a question, (2) the question is converted to an embedding, (3) the most similar document chunks are retrieved from a vector database, (4) those chunks are prepended to the original question as context, (5) the LLM uses both its parametric knowledge and the retrieved context to generate an answer. Got any questions? Feel free to ask.",
-    "learning_objectives": [
-      "Explain the core components of a RAG architecture (embedding, retrieval, generation)",
-      "Describe when and why RAG is preferred over other approaches, with examples",
-      "Distinguish between RAG and classic fine-tuning"
-    ]
-  },
+  "content": {
+    "en": {
+      "tutor_persona": "You are a Tutor Agent teaching undergraduate software engineering students about RAG (Retrieval-Augmented Generation). ONLY discuss topics within the scope of RAG: its theory, application, and critical limitations. If the conversation drifts outside RAG, gently redirect the student back to the topic without elaborating on the off-topic question (FR-3.5). Keep your answers open-ended, conversational, and appropriate for the student's level.",
 
-  "application": {
-    "task_description": "In this hands-on task you will experience a real RAG pipeline step by step on a small document collection. The Tutor Agent will invoke the 'search documents' tool on your behalf to actually trigger the retrieval step (FR-4.1).",
-    "tool_name": "search_documents",
-    "tool_description": "Performs a semantic search over the RAG document collection (ChromaDB) and returns the most relevant chunks.",
-    "steps": [
-      {
-        "step_number": 1,
-        "title": "Formulate a question",
-        "instruction": "Write a question related to the document collection (e.g. 'Why does chunk size matter in RAG?'). The Tutor Agent will trigger the search for you."
+      "theory": {
+        "intro_text": "RAG (Retrieval-Augmented Generation) is an architecture that allows an LLM to retrieve relevant chunks from an external document collection — such as a knowledge base or corpus — and use them as context when generating a response. This way the model can access information that was not in its training data or is out of date, and it reduces the risk of hallucination. The basic flow is: (1) the student/user asks a question, (2) the question is converted to an embedding, (3) the most similar document chunks are retrieved from a vector database, (4) those chunks are prepended to the original question as context, (5) the LLM uses both its parametric knowledge and the retrieved context to generate an answer. Got any questions? Feel free to ask.",
+        "learning_objectives": [
+          "Explain the core components of a RAG architecture (embedding, retrieval, generation)",
+          "Describe when and why RAG is preferred over other approaches, with examples",
+          "Distinguish between RAG and classic fine-tuning"
+        ]
       },
-      {
-        "step_number": 2,
-        "title": "Inspect the retrieved chunks",
-        "instruction": "Read the document chunks the Tutor Agent retrieved; ask how each chunk contributes to the answer."
+
+      "application": {
+        "task_description": "In this hands-on task you will experience a real RAG pipeline step by step on a small document collection. The Tutor Agent will invoke the 'search documents' tool on your behalf to actually trigger the retrieval step (FR-4.1).",
+        "tool_name": "search_documents",
+        "tool_description": "Performs a semantic search over the RAG document collection (ChromaDB) and returns the most relevant chunks.",
+        "steps": [
+          {
+            "step_number": 1,
+            "title": "Formulate a question",
+            "instruction": "Write a question related to the document collection (e.g. 'Why does chunk size matter in RAG?'). The Tutor Agent will trigger the search for you."
+          },
+          {
+            "step_number": 2,
+            "title": "Inspect the retrieved chunks",
+            "instruction": "Read the document chunks the Tutor Agent retrieved; ask how each chunk contributes to the answer."
+          },
+          {
+            "step_number": 3,
+            "title": "Evaluate retrieval quality",
+            "instruction": "Assess how relevant the retrieved chunks are to your question; if an irrelevant chunk was returned, ask the Tutor Agent what might have caused it."
+          }
+        ]
       },
-      {
-        "step_number": 3,
-        "title": "Evaluate retrieval quality",
-        "instruction": "Assess how relevant the retrieved chunks are to your question; if an irrelevant chunk was returned, ask the Tutor Agent what might have caused it."
-      }
-    ]
-  },
 
-  "critical": {
-    "discussion_starter": "Now let's discuss the limits of RAG. RAG does not eliminate hallucination; it depends on retrieval quality — if wrong or irrelevant chunks are retrieved, the model can still produce a wrong answer. The freshness of the document collection, the chunking strategy, and the quality of the embedding model all directly affect the outcome. In your opinion, when does RAG fall short? What risks does it introduce?"
-  },
+      "critical": {
+        "discussion_starter": "Now let's discuss the limits of RAG. RAG does not eliminate hallucination; it depends on retrieval quality — if wrong or irrelevant chunks are retrieved, the model can still produce a wrong answer. The freshness of the document collection, the chunking strategy, and the quality of the embedding model all directly affect the outcome. In your opinion, when does RAG fall short? What risks does it introduce?"
+      },
 
-  "quiz": {
-    "theory": {
-      "mcq": [
-        {
-          "id": "rag_theory_mcq_1",
-          "question": "What is the primary purpose of the 'retrieval' step in a RAG architecture?",
-          "options": [
-            "To update the model's parameters",
-            "To find and add relevant external document chunks to the context",
-            "To censor the model's output",
-            "To label the training data"
+      "quiz": {
+        "theory": {
+          "mcq": [
+            {
+              "id": "rag_theory_mcq_1",
+              "question": "What is the primary purpose of the 'retrieval' step in a RAG architecture?",
+              "options": [
+                "To update the model's parameters",
+                "To find and add relevant external document chunks to the context",
+                "To censor the model's output",
+                "To label the training data"
+              ],
+              "correct_index": 1
+            },
+            {
+              "id": "rag_theory_mcq_2",
+              "question": "What is one key advantage of RAG over fine-tuning?",
+              "options": [
+                "New or external knowledge can be added without changing model weights",
+                "It requires less compute than a training run",
+                "It requires the model to be fully retrained",
+                "It guarantees the elimination of hallucinations"
+              ],
+              "correct_index": 0
+            }
           ],
-          "correct_index": 1
+          "open_ended": {
+            "id": "rag_theory_open_1",
+            "question": "In your own words, briefly describe the 5 steps of a RAG pipeline.",
+            "evaluation_criteria": "The answer must correctly reference at least 4 of the following steps, in order or by meaning: receiving the question/query, converting it to an embedding, retrieval (fetching relevant chunks via vector search), adding them as context, and generating an answer with the LLM."
+          }
         },
-        {
-          "id": "rag_theory_mcq_2",
-          "question": "What is one key advantage of RAG over fine-tuning?",
-          "options": [
-            "New or external knowledge can be added without changing model weights",
-            "It requires less compute than a training run",
-            "It requires the model to be fully retrained",
-            "It guarantees the elimination of hallucinations"
+        "application": {
+          "mcq": [
+            {
+              "id": "rag_application_mcq_1",
+              "question": "During the application task, when does the Tutor Agent trigger the 'search documents' tool?",
+              "options": [
+                "Automatically at the start of every session",
+                "When the student asks a task-related question and retrieval is needed",
+                "Only during the quiz",
+                "Never — retrieval is fully pre-computed"
+              ],
+              "correct_index": 1
+            },
+            {
+              "id": "rag_application_mcq_2",
+              "question": "What does it mean when the retrieved document chunks are irrelevant to the question?",
+              "options": [
+                "The embedding model is definitely broken",
+                "Retrieval quality has degraded, which can affect the quality of the answer",
+                "This is normal and does not matter",
+                "The LLM API has crashed"
+              ],
+              "correct_index": 1
+            }
           ],
-          "correct_index": 0
+          "open_ended": {
+            "id": "rag_application_open_1",
+            "question": "In your own words, describe how the Tutor Agent used the document search tool during this task, and how you evaluated whether the retrieved results were of good quality.",
+            "evaluation_criteria": "The answer should reflect that the tool was triggered by a query, that the relevance of the returned chunks could be assessed, and that this assessment relates to retrieval quality."
+          }
+        },
+        "critical": {
+          "mcq": [
+            {
+              "id": "rag_critical_mcq_1",
+              "question": "What does RAG provide with respect to hallucination?",
+              "options": [
+                "It completely eliminates hallucination",
+                "It can reduce the risk of hallucination but does not guarantee it",
+                "It increases the risk of hallucination and has no benefit",
+                "It has no relationship to the concept of hallucination"
+              ],
+              "correct_index": 1
+            },
+            {
+              "id": "rag_critical_mcq_2",
+              "question": "What can happen if the retrieval step returns an irrelevant or incorrect chunk?",
+              "options": [
+                "The model automatically detects and discards it",
+                "The model may produce a wrong answer based on that bad context",
+                "The system automatically halts",
+                "Nothing — the model falls back to its own knowledge"
+              ],
+              "correct_index": 1
+            }
+          ],
+          "open_ended": {
+            "id": "rag_critical_open_1",
+            "question": "Describe, with your own examples, situations where RAG might fall short or introduce additional risks.",
+            "evaluation_criteria": "The answer must explain at least one concrete limitation — such as dependence on retrieval quality, document freshness or conflicting sources, chunking or embedding quality — with an example."
+          }
         }
-      ],
-      "open_ended": {
-        "id": "rag_theory_open_1",
-        "question": "In your own words, briefly describe the 5 steps of a RAG pipeline.",
-        "evaluation_criteria": "The answer must correctly reference at least 4 of the following steps, in order or by meaning: receiving the question/query, converting it to an embedding, retrieval (fetching relevant chunks via vector search), adding them as context, and generating an answer with the LLM."
       }
     },
-    "application": {
-      "mcq": [
-        {
-          "id": "rag_application_mcq_1",
-          "question": "During the application task, when does the Tutor Agent trigger the 'search documents' tool?",
-          "options": [
-            "Automatically at the start of every session",
-            "When the student asks a task-related question and retrieval is needed",
-            "Only during the quiz",
-            "Never — retrieval is fully pre-computed"
+
+    "tr": {
+      "tutor_persona": "Sen, lisans yazılım mühendisliği öğrencilerine RAG (Retrieval-Augmented Generation / Erişimle Zenginleştirilmiş Üretim) konusunu öğreten bir Öğretici (Tutor) Ajanısın. YALNIZCA RAG kapsamındaki konuları tartış: teorisi, uygulaması ve kritik sınırlılıkları. Konuşma RAG dışına kayarsa, kapsam dışı soruyu detaylandırmadan öğrenciyi nazikçe konuya geri yönlendir (FR-3.5). Cevaplarını açık uçlu, sohbet tarzında ve öğrencinin seviyesine uygun tut.",
+
+      "theory": {
+        "intro_text": "RAG (Retrieval-Augmented Generation / Erişimle Zenginleştirilmiş Üretim), bir LLM'in bir bilgi tabanı veya doküman koleksiyonu gibi harici bir kaynaktan ilgili parçaları (chunk) alıp bunları cevap üretirken bağlam olarak kullanmasını sağlayan bir mimaridir. Bu sayede model, eğitim verisinde bulunmayan veya güncelliğini yitirmiş bilgilere erişebilir ve halüsinasyon riski azalır. Temel akış şöyledir: (1) öğrenci/kullanıcı bir soru sorar, (2) soru bir embedding'e (gömme vektörüne) dönüştürülür, (3) bir vektör veritabanından en benzer doküman parçaları getirilir, (4) bu parçalar bağlam olarak orijinal sorunun başına eklenir, (5) LLM hem kendi parametrik bilgisini hem de getirilen bağlamı kullanarak bir cevap üretir. Sorunuz var mı? Sormaktan çekinmeyin.",
+        "learning_objectives": [
+          "Bir RAG mimarisinin temel bileşenlerini açıklayabilme (embedding, retrieval, generation)",
+          "RAG'ın diğer yaklaşımlara ne zaman ve neden tercih edildiğini örneklerle açıklayabilme",
+          "RAG ile klasik fine-tuning arasındaki farkı ayırt edebilme"
+        ]
+      },
+
+      "application": {
+        "task_description": "Bu uygulamalı görevde, küçük bir doküman koleksiyonu üzerinde gerçek bir RAG işlem hattını adım adım deneyimleyeceksin. Öğretici Ajan, retrieval (erişim) adımını gerçekten tetiklemek için senin adına 'doküman ara' aracını çağıracak (FR-4.1).",
+        "tool_name": "search_documents",
+        "tool_description": "RAG doküman koleksiyonu (ChromaDB) üzerinde anlamsal bir arama yapar ve en ilgili parçaları döner.",
+        "steps": [
+          {
+            "step_number": 1,
+            "title": "Bir soru oluştur",
+            "instruction": "Doküman koleksiyonuyla ilgili bir soru yaz (örn. 'RAG'de chunk boyutu neden önemli?'). Öğretici Ajan aramayı senin için tetikleyecek."
+          },
+          {
+            "step_number": 2,
+            "title": "Getirilen parçaları incele",
+            "instruction": "Öğretici Ajan'ın getirdiği doküman parçalarını oku; her parçanın cevaba nasıl katkı sağladığını sor."
+          },
+          {
+            "step_number": 3,
+            "title": "Erişim (retrieval) kalitesini değerlendir",
+            "instruction": "Getirilen parçaların sorunla ne kadar ilgili olduğunu değerlendir; alakasız bir parça döndüyse Öğretici Ajan'a bunun sebebi ne olabilir diye sor."
+          }
+        ]
+      },
+
+      "critical": {
+        "discussion_starter": "Şimdi RAG'ın sınırlarını tartışalım. RAG halüsinasyonu tamamen ortadan kaldırmaz; retrieval (erişim) kalitesine bağlıdır — yanlış veya alakasız parçalar getirilirse model yine de yanlış bir cevap üretebilir. Doküman koleksiyonunun güncelliği, parçalama (chunking) stratejisi ve embedding modelinin kalitesi sonucu doğrudan etkiler. Sizce RAG ne zaman yetersiz kalır? Hangi riskleri beraberinde getirir?"
+      },
+
+      "quiz": {
+        "theory": {
+          "mcq": [
+            {
+              "id": "rag_theory_mcq_1",
+              "question": "Bir RAG mimarisindeki 'retrieval' (erişim) adımının temel amacı nedir?",
+              "options": [
+                "Modelin parametrelerini güncellemek",
+                "Bağlama eklemek üzere ilgili harici doküman parçalarını bulmak",
+                "Modelin çıktısını sansürlemek",
+                "Eğitim verisini etiketlemek"
+              ],
+              "correct_index": 1
+            },
+            {
+              "id": "rag_theory_mcq_2",
+              "question": "RAG'ın fine-tuning'e göre önemli bir avantajı nedir?",
+              "options": [
+                "Model ağırlıkları değiştirilmeden yeni veya harici bilgi eklenebilir",
+                "Bir eğitim çalıştırmasından daha az işlem gücü gerektirir",
+                "Modelin tamamen yeniden eğitilmesini gerektirir",
+                "Halüsinasyonların tamamen ortadan kalkacağını garanti eder"
+              ],
+              "correct_index": 0
+            }
           ],
-          "correct_index": 1
+          "open_ended": {
+            "id": "rag_theory_open_1",
+            "question": "Kendi ifadelerinle, bir RAG işlem hattının 5 adımını kısaca açıkla.",
+            "evaluation_criteria": "Cevap, şu adımlardan en az 4'üne sırayla veya anlamca doğru şekilde değinmelidir: sorunun/sorgunun alınması, embedding'e dönüştürülmesi, retrieval (vektör aramasıyla ilgili parçaların getirilmesi), bunların bağlam olarak eklenmesi ve LLM ile cevap üretilmesi."
+          }
         },
-        {
-          "id": "rag_application_mcq_2",
-          "question": "What does it mean when the retrieved document chunks are irrelevant to the question?",
-          "options": [
-            "The embedding model is definitely broken",
-            "Retrieval quality has degraded, which can affect the quality of the answer",
-            "This is normal and does not matter",
-            "The LLM API has crashed"
+        "application": {
+          "mcq": [
+            {
+              "id": "rag_application_mcq_1",
+              "question": "Uygulama görevi sırasında Öğretici Ajan 'doküman ara' aracını ne zaman tetikler?",
+              "options": [
+                "Her oturumun başında otomatik olarak",
+                "Öğrenci göreve ilişkin bir soru sorduğunda ve retrieval gerektiğinde",
+                "Yalnızca quiz sırasında",
+                "Asla — retrieval tamamen önceden hesaplanmıştır"
+              ],
+              "correct_index": 1
+            },
+            {
+              "id": "rag_application_mcq_2",
+              "question": "Getirilen doküman parçaları soruyla alakasızsa bu ne anlama gelir?",
+              "options": [
+                "Embedding modeli kesinlikle bozuktur",
+                "Retrieval (erişim) kalitesi düşmüştür, bu da cevabın kalitesini etkileyebilir",
+                "Bu normaldir ve önemli değildir",
+                "LLM API'si çökmüştür"
+              ],
+              "correct_index": 1
+            }
           ],
-          "correct_index": 1
-        }
-      ],
-      "open_ended": {
-        "id": "rag_application_open_1",
-        "question": "In your own words, describe how the Tutor Agent used the document search tool during this task, and how you evaluated whether the retrieved results were of good quality.",
-        "evaluation_criteria": "The answer should reflect that the tool was triggered by a query, that the relevance of the returned chunks could be assessed, and that this assessment relates to retrieval quality."
-      }
-    },
-    "critical": {
-      "mcq": [
-        {
-          "id": "rag_critical_mcq_1",
-          "question": "What does RAG provide with respect to hallucination?",
-          "options": [
-            "It completely eliminates hallucination",
-            "It can reduce the risk of hallucination but does not guarantee it",
-            "It increases the risk of hallucination and has no benefit",
-            "It has no relationship to the concept of hallucination"
-          ],
-          "correct_index": 1
+          "open_ended": {
+            "id": "rag_application_open_1",
+            "question": "Kendi ifadelerinle, Öğretici Ajan'ın bu görev sırasında doküman arama aracını nasıl kullandığını ve getirilen sonuçların kaliteli olup olmadığını nasıl değerlendirdiğini açıkla.",
+            "evaluation_criteria": "Cevap, aracın bir sorgu ile tetiklendiğini, dönen parçaların ilgililiğinin değerlendirilebildiğini ve bu değerlendirmenin retrieval kalitesiyle ilişkili olduğunu yansıtmalıdır."
+          }
         },
-        {
-          "id": "rag_critical_mcq_2",
-          "question": "What can happen if the retrieval step returns an irrelevant or incorrect chunk?",
-          "options": [
-            "The model automatically detects and discards it",
-            "The model may produce a wrong answer based on that bad context",
-            "The system automatically halts",
-            "Nothing — the model falls back to its own knowledge"
+        "critical": {
+          "mcq": [
+            {
+              "id": "rag_critical_mcq_1",
+              "question": "RAG, halüsinasyon açısından ne sağlar?",
+              "options": [
+                "Halüsinasyonu tamamen ortadan kaldırır",
+                "Halüsinasyon riskini azaltabilir ama garanti etmez",
+                "Halüsinasyon riskini artırır ve hiçbir faydası yoktur",
+                "Halüsinasyon kavramıyla hiçbir ilişkisi yoktur"
+              ],
+              "correct_index": 1
+            },
+            {
+              "id": "rag_critical_mcq_2",
+              "question": "Retrieval adımı alakasız veya yanlış bir parça döndürürse ne olabilir?",
+              "options": [
+                "Model bunu otomatik olarak tespit edip yok sayar",
+                "Model bu kötü bağlama dayanarak yanlış bir cevap üretebilir",
+                "Sistem otomatik olarak durur",
+                "Hiçbir şey olmaz — model kendi bilgisine geri döner"
+              ],
+              "correct_index": 1
+            }
           ],
-          "correct_index": 1
+          "open_ended": {
+            "id": "rag_critical_open_1",
+            "question": "Kendi örneklerinle, RAG'ın yetersiz kalabileceği veya ek riskler getirebileceği durumları açıkla.",
+            "evaluation_criteria": "Cevap; retrieval kalitesine bağımlılık, doküman güncelliği veya çelişen kaynaklar, chunking ya da embedding kalitesi gibi en az bir somut sınırlılığı örnekle açıklamalıdır."
+          }
         }
-      ],
-      "open_ended": {
-        "id": "rag_critical_open_1",
-        "question": "Describe, with your own examples, situations where RAG might fall short or introduce additional risks.",
-        "evaluation_criteria": "The answer must explain at least one concrete limitation — such as dependence on retrieval quality, document freshness or conflicting sources, chunking or embedding quality — with an example."
       }
     }
   }

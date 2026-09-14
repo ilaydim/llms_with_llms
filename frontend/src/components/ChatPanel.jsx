@@ -1,27 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { useLanguage } from "../i18n";
 import MessageBubble from "./MessageBubble";
-
-const LAYER_COPY = {
-  theory: {
-    placeholder: "Ask anything about RAG in your own words…",
-    emptyLabel: "Theory",
-  },
-  application: {
-    placeholder: "Ask a question about the task — the Tutor Agent will search the documents…",
-    emptyLabel: "Application",
-  },
-  critical: {
-    placeholder: "Share your thoughts on the limits and risks of RAG…",
-    emptyLabel: "Critical Thinking",
-  },
-};
-
-const STEP_LABELS = {
-  1: "Formulate a question",
-  2: "Inspect the retrieved chunks",
-  3: "Evaluate retrieval quality",
-};
 
 export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz }) {
   const [intro, setIntro] = useState("");
@@ -33,6 +13,7 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
   // FR-4.3: uygulama katmanı adım takibi
   const [tasks, setTasks] = useState([]);
   const scrollRef = useRef(null);
+  const { t, lang } = useLanguage();
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +21,7 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
     setError("");
 
     const fetches = [
-      api.getLayerIntro(moduleCode, layer),
+      api.getLayerIntro(moduleCode, layer, lang),
       api.getHistory(sessionId, moduleCode, layer),
     ];
     // Uygulama katmanında task adımlarını da çek
@@ -59,7 +40,7 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
       .finally(() => !cancelled && setLoadingHistory(false));
 
     return () => { cancelled = true; };
-  }, [sessionId, moduleCode, layer]);
+  }, [sessionId, moduleCode, layer, lang]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -85,7 +66,7 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
 
     try {
       const meta = await api.sendMessageStream(
-        { sessionId, moduleCode, layer, content },
+        { sessionId, moduleCode, layer, content, lang },
         (chunk) => {
           setMessages((prev) =>
             prev.map((m) =>
@@ -121,25 +102,26 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
     }
   }
 
-  const copy = LAYER_COPY[layer];
+  const layerLabel = t(`layer.${layer}`);
+  const placeholder = t(`chat.placeholder.${layer}`);
   const allTasksDone = tasks.length > 0 && tasks.every((t) => t.status === "completed");
 
   return (
     <div className="chat-panel">
       <div className="chat-scroll" ref={scrollRef}>
         {loadingHistory ? (
-          <p className="chat-status">Loading…</p>
+          <p className="chat-status">{t("common.loading")}</p>
         ) : (
           <>
             <div className="chat-intro">
-              <span className="chat-intro-label">{copy.emptyLabel} — Introduction</span>
+              <span className="chat-intro-label">{t("chat.intro", { layer: layerLabel })}</span>
               <p>{intro}</p>
             </div>
 
             {/* FR-4.3: Uygulama katmanı adım checklist'i */}
             {layer === "application" && tasks.length > 0 && (
               <div className="task-checklist">
-                <p className="task-checklist-title">Task Steps</p>
+                <p className="task-checklist-title">{t("chat.taskSteps")}</p>
                 {tasks.map((task) => (
                   <label key={task.id} className={`task-item ${task.status === "completed" ? "task-item--done" : ""}`}>
                     <input
@@ -149,13 +131,15 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
                     />
                     <span>
                       <strong>{task.step_number}.</strong>{" "}
-                      {STEP_LABELS[task.step_number] || `Step ${task.step_number}`}
+                      {task.step_number >= 1 && task.step_number <= 3
+                        ? t(`chat.step.${task.step_number}`)
+                        : t("chat.step.generic", { n: task.step_number })}
                     </span>
                   </label>
                 ))}
                 {allTasksDone && (
                   <p className="task-checklist-done">
-                    All steps completed — you can now take the quiz.
+                    {t("chat.allTasksDone")}
                   </p>
                 )}
               </div>
@@ -175,8 +159,8 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
             {sending && !messages.some((m) => m.streaming) && (
               <div className="bubble-row bubble-row--tutor">
                 <div className="bubble bubble--pending">
-                  <span className="bubble-tag">TUTOR</span>
-                  <p className="bubble-content bubble-content--pending">thinking…</p>
+                  <span className="bubble-tag">{t("bubble.tutor")}</span>
+                  <p className="bubble-content bubble-content--pending">{t("chat.thinking")}</p>
                 </div>
               </div>
             )}
@@ -190,14 +174,14 @@ export default function ChatPanel({ sessionId, moduleCode, layer, onStartQuiz })
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={copy.placeholder}
+          placeholder={placeholder}
           disabled={sending || loadingHistory}
         />
         <button className="btn-primary" type="submit" disabled={sending || loadingHistory || !draft.trim()}>
-          Send
+          {t("chat.send")}
         </button>
         <button type="button" className="btn-secondary" onClick={onStartQuiz} disabled={loadingHistory}>
-          Take quiz
+          {t("chat.takeQuiz")}
         </button>
       </form>
     </div>

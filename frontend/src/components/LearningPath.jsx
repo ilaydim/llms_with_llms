@@ -1,21 +1,26 @@
-const LAYERS = [
-  { key: "theory", index: "01", label: "Theory", desc: "Conceptual foundation" },
-  { key: "application", index: "02", label: "Application", desc: "Build & experiment" },
-  { key: "critical", index: "03", label: "Critical Thinking", desc: "Limits & risks" },
-];
+import { useLanguage } from "../i18n";
+
+const LAYER_KEYS = ["theory", "application", "critical"];
 
 export default function LearningPath({ activeLayer, onSelect, moduleName, unlockedLayers = [] }) {
-  const activeIdx = LAYERS.findIndex((l) => l.key === activeLayer);
+  const { t } = useLanguage();
+  const layers = LAYER_KEYS.map((key, i) => ({
+    key,
+    index: String(i + 1).padStart(2, "0"),
+    label: t(`layer.${key}`),
+    desc: t(`layer.${key}.desc`),
+  }));
+  const activeIdx = layers.findIndex((l) => l.key === activeLayer);
 
   return (
     <nav className="learning-path">
       <div className="learning-path-header">
-        <p className="learning-path-module-label">Module</p>
+        <p className="learning-path-module-label">{t("learningPath.module")}</p>
         <p className="learning-path-module-name">{moduleName}</p>
       </div>
 
       <ol className="learning-path-list">
-        {LAYERS.map((layer, i) => {
+        {layers.map((layer, i) => {
           const isCompleted = i < activeIdx;
           const isActive = i === activeIdx;
           const isLocked = !isActive && !isCompleted && !unlockedLayers.includes(layer.key);
@@ -28,7 +33,7 @@ export default function LearningPath({ activeLayer, onSelect, moduleName, unlock
                 onClick={() => !isLocked && onSelect(layer.key)}
                 disabled={isLocked}
                 aria-current={isActive ? "step" : undefined}
-                title={isLocked ? "Complete the previous layer's quiz to unlock" : undefined}
+                title={isLocked ? t("learningPath.locked") : undefined}
               >
                 <span className="path-step-index">{isLocked ? "🔒" : layer.index}</span>
                 <span className="path-step-text">
@@ -36,7 +41,7 @@ export default function LearningPath({ activeLayer, onSelect, moduleName, unlock
                   <span className="path-step-desc">{layer.desc}</span>
                 </span>
               </button>
-              {i < LAYERS.length - 1 && <span className="path-step-connector" aria-hidden="true" />}
+              {i < layers.length - 1 && <span className="path-step-connector" aria-hidden="true" />}
             </li>
           );
         })}

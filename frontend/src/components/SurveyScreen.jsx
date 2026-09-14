@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useLanguage } from "../i18n";
+import LanguageSwitch from "./LanguageSwitch";
 
 const LIKERT_VALUES = [1, 2, 3, 4, 5];
 
@@ -9,14 +11,15 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { t, lang } = useLanguage();
 
   useEffect(() => {
     api
-      .getSurveyQuestions(surveyType)
+      .getSurveyQuestions(surveyType, lang)
       .then(setQuestions)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [surveyType]);
+  }, [surveyType, lang]);
 
   function setAnswer(questionId, value) {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -43,22 +46,19 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
   return (
     <div className="survey-screen">
       <div className="survey-card">
+        <LanguageSwitch />
         <p className="identify-eyebrow">
-          {surveyType === "pre" ? "Pre-Study Survey" : "Post-Study Survey"}
+          {surveyType === "pre" ? t("survey.pre.eyebrow") : t("survey.post.eyebrow")}
         </p>
         <h1 className="identify-title">
-          {surveyType === "pre"
-            ? "A few questions before you start"
-            : "Great work! A few final questions"}
+          {surveyType === "pre" ? t("survey.pre.title") : t("survey.post.title")}
         </h1>
         <p className="identify-sub">
-          {surveyType === "pre"
-            ? "This short survey measures your baseline knowledge — there are no right or wrong answers."
-            : "This survey will be used to compare your knowledge before and after the module."}
+          {surveyType === "pre" ? t("survey.pre.sub") : t("survey.post.sub")}
         </p>
 
         {loading ? (
-          <p className="chat-status">Loading…</p>
+          <p className="chat-status">{t("common.loading")}</p>
         ) : (
           <form onSubmit={handleSubmit} className="survey-form">
             {questions.map((q, i) => (
@@ -90,7 +90,7 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
                     rows={3}
                     value={answers[q.id] || ""}
                     onChange={(e) => setAnswer(q.id, e.target.value)}
-                    placeholder="Write your answer here…"
+                    placeholder={t("common.writeYourAnswer")}
                   />
                 )}
               </div>
@@ -99,7 +99,7 @@ export default function SurveyScreen({ studentId, surveyType, onCompleted }) {
             {error && <p className="identify-error">{error}</p>}
 
             <button className="btn-primary" type="submit" disabled={!allAnswered || submitting}>
-              {submitting ? "Submitting…" : "Submit survey"}
+              {submitting ? t("survey.submitting") : t("survey.submit")}
             </button>
           </form>
         )}

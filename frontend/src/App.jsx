@@ -7,6 +7,8 @@ import TopBar from "./components/TopBar";
 import LearningPath from "./components/LearningPath";
 import ChatPanel from "./components/ChatPanel";
 import QuizScreen from "./components/QuizScreen";
+import LanguageSwitch from "./components/LanguageSwitch";
+import { useLanguage } from "./i18n";
 import "./App.css";
 
 const MODULE_CODE = "rag";
@@ -35,6 +37,7 @@ function loadFromStorage() {
 }
 
 export default function App() {
+  const { t } = useLanguage();
   // NFR-2.2: Informed consent — localStorage'da kayıtlıysa tekrar gösterme
   const [consented, setConsented] = useState(() => !!localStorage.getItem(CONSENT_KEY));
 
@@ -122,7 +125,7 @@ export default function App() {
         setView("chat");
       }
     } catch (e) {
-      setError("Could not connect — is the backend (FastAPI) running? " + e.message);
+      setError(t("common.connectError") + e.message);
     } finally {
       setLoading(false);
     }
@@ -155,7 +158,8 @@ export default function App() {
     return (
       <div className="identify-screen">
         <div className="identify-card">
-          <p className="identify-sub">Loading…</p>
+          <LanguageSwitch />
+          <p className="identify-sub">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -189,10 +193,11 @@ export default function App() {
     return (
       <div className="identify-screen">
         <div className="identify-card">
-          <p className="identify-eyebrow">Completed</p>
-          <h1 className="identify-title">Thank you, {student.name}!</h1>
+          <LanguageSwitch />
+          <p className="identify-eyebrow">{t("app.completed")}</p>
+          <h1 className="identify-title">{t("app.thankYou", { name: student.name })}</h1>
           <p className="identify-sub">
-            You have completed the RAG module from start to finish. Thank you for your participation — your data will be used anonymously for research purposes.
+            {t("app.finishedBody")}
           </p>
         </div>
       </div>

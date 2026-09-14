@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-
-const LAYER_LABEL = { theory: "Theory", application: "Application", critical: "Critical Thinking" };
+import { useLanguage } from "../i18n";
 
 export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, onAdvanceLayer }) {
   const [quiz, setQuiz] = useState(null);
@@ -12,6 +11,7 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
   const [result, setResult] = useState(null);
   const [revisitExplanation, setRevisitExplanation] = useState(null);
   const [error, setError] = useState("");
+  const { t, lang } = useLanguage();
 
   useEffect(() => {
     setQuiz(null);
@@ -21,11 +21,11 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
     setOpenEndedAnswer("");
     setLoading(true);
     api
-      .getQuiz(moduleCode, layer)
+      .getQuiz(moduleCode, layer, lang)
       .then(setQuiz)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [moduleCode, layer]);
+  }, [moduleCode, layer, lang]);
 
   const allMcqAnswered = quiz && quiz.mcq.every((q) => mcqAnswers[q.id] !== undefined);
   const canSubmit = allMcqAnswered && openEndedAnswer.trim().length > 0;
@@ -46,6 +46,7 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
         layer,
         mcqAnswers: mcqPayload,
         openEndedAnswer,
+        lang,
       });
       setResult(res);
     } catch (e) {
@@ -58,7 +59,7 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
   async function handleRevisitChoice(wantsRevisit) {
     setError("");
     try {
-      const res = await api.submitRevisit({ sessionId, moduleCode, layer, revisited: wantsRevisit });
+      const res = await api.submitRevisit({ sessionId, moduleCode, layer, revisited: wantsRevisit, lang });
       if (wantsRevisit) {
         setRevisitExplanation(res.explanation);
       } else {
@@ -76,15 +77,17 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
     setOpenEndedAnswer("");
   }
 
-  if (loading) return <div className="quiz-screen"><p className="chat-status">Loading quiz…</p></div>;
-  if (!quiz) return <div className="quiz-screen"><p className="identify-error">{error || "Quiz not found."}</p></div>;
+  if (loading) return <div className="quiz-screen"><p className="chat-status">{t("quiz.loading")}</p></div>;
+  if (!quiz) return <div className="quiz-screen"><p className="identify-error">{error || t("quiz.notFound")}</p></div>;
+
+  const layerLabel = t(`layer.${layer}`);
 
   return (
     <div className="quiz-screen">
       <div className="quiz-card">
         <div className="quiz-header">
-          <span className="chat-intro-label">{LAYER_LABEL[layer]} — End-of-Layer Quiz</span>
-          <button className="quiz-back-link" onClick={onLeaveQuiz}>← Back to dialogue</button>
+          <span className="chat-intro-label">{t("quiz.header", { layer: layerLabel })}</span>
+          <button className="quiz-back-link" onClick={onLeaveQuiz}>{t("quiz.backToDialogue")}</button>
         </div>
 
         {!result && !revisitExplanation && (
@@ -118,14 +121,14 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
                 rows={4}
                 value={openEndedAnswer}
                 onChange={(e) => setOpenEndedAnswer(e.target.value)}
-                placeholder="Write your answer here…"
+                placeholder={t("common.writeYourAnswer")}
               />
             </div>
 
             {error && <p className="identify-error">{error}</p>}
 
             <button className="btn-primary" type="submit" disabled={!canSubmit || submitting}>
-              {submitting ? "Evaluating…" : "Submit quiz"}
+              {submitting ? t("quiz.evaluating") : t("quiz.submit")}
             </button>
           </form>
         )}
@@ -133,11 +136,13 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
         {result && !revisitExplanation && (
           <div className="quiz-result">
             <p className={`quiz-result-badge ${result.passed ? "quiz-result-badge--pass" : "quiz-result-badge--fail"}`}>
-              {result.passed ? "Passed" : "Not yet"}
+              {result.passed ? t("quiz.passed") : t("quiz.notYet")}
             </p>
             <p className="quiz-result-detail">
-              Multiple choice: {Math.round(result.mcq_score * 100)}% ·{" "}
-              Open-ended: {Math.round((result.open_ended_score ?? 0) * 100)}%
+              {t("quiz.detail", {
+                mcq: Math.round(result.mcq_score * 100),
+                open: Math.round((result.open_ended_score ?? 0) * 100),
+              })}
             </p>
             {result.open_ended_feedback && (
               <p className="quiz-result-feedback">{result.open_ended_feedback}</p>
@@ -145,17 +150,17 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
 
             {result.passed ? (
               <button className="btn-primary" onClick={onAdvanceLayer}>
-                Continue →
+                {t("quiz.continue")}
               </button>
             ) : (
               <div className="quiz-revisit-choice">
-                <p>Would you like to revisit this topic with a different explanation?</p>
+                <p>{t("quiz.revisit.prompt")}</p>
                 <div className="quiz-revisit-buttons">
                   <button className="btn-secondary" onClick={() => handleRevisitChoice(false)}>
-                    No, continue anyway
+                    {t("quiz.revisit.no")}
                   </button>
                   <button className="btn-primary" onClick={() => handleRevisitChoice(true)}>
-                    Yes, explain again
+                    {t("quiz.revisit.yes")}
                   </button>
                 </div>
               </div>
@@ -165,11 +170,11 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
 
         {revisitExplanation && (
           <div className="quiz-result">
-            <p className="chat-intro-label">New explanation</p>
+            <p className="chat-intro-label">{t("quiz.newExplanation")}</p>
             <p className="quiz-revisit-text">{revisitExplanation}</p>
-            <p className="survey-question-text" style={{ marginTop: 16 }}>Does that make more sense?</p>
+            <p className="survey-question-text" style={{ marginTop: 16 }}>{t("quiz.makeSense")}</p>
             <button className="btn-primary" onClick={handleRetake}>
-              Yes, retake the quiz
+              {t("quiz.retake")}
             </button>
           </div>
         )}

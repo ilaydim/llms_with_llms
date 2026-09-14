@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useLanguage } from "../i18n";
+import LanguageSwitch from "./LanguageSwitch";
 
 export default function IdentifyScreen({ onIdentified, loading, error }) {
   const [name, setName] = useState("");
   const [studentNo, setStudentNo] = useState("");
+  const { t } = useLanguage();
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -13,45 +16,46 @@ export default function IdentifyScreen({ onIdentified, loading, error }) {
   return (
     <div className="identify-screen">
       <div className="identify-card">
-        <p className="identify-eyebrow">Learning LLMs with LLMs</p>
+        <LanguageSwitch />
+        <p className="identify-eyebrow">{t("app.brand")}</p>
         <h1 className="identify-title">
-          Learn about LLMs by talking to one.
+          {t("identify.title")}
         </h1>
         <p className="identify-sub">
-          In this pilot study you will explore RAG (Retrieval-Augmented Generation)
-          across three layers: <strong>Theory</strong> → <strong>Application</strong> →{" "}
-          <strong>Critical Thinking</strong>. No account needed — just introduce yourself.
+          {t("identify.sub1")}{" "}
+          <strong>{t("layer.theory")}</strong> → <strong>{t("layer.application")}</strong> →{" "}
+          <strong>{t("layer.critical")}</strong>. {t("identify.sub2")}
         </p>
 
         <form onSubmit={handleSubmit} className="identify-form">
           <label className="field">
-            <span>Your name</span>
+            <span>{t("identify.name.label")}</span>
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Alex Johnson"
+              placeholder={t("identify.name.placeholder")}
               required
             />
           </label>
           <label className="field">
-            <span>Student ID <em>(optional)</em></span>
+            <span>{t("identify.studentNo.label")} <em>{t("identify.studentNo.optional")}</em></span>
             <input
               value={studentNo}
               onChange={(e) => setStudentNo(e.target.value)}
-              placeholder="e.g. 20210101"
+              placeholder={t("identify.studentNo.placeholder")}
             />
           </label>
 
           {error && <p className="identify-error">{error}</p>}
 
           <button className="btn-primary" type="submit" disabled={loading}>
-            {loading ? "Setting up…" : "Start learning"}
+            {loading ? t("identify.settingUp") : t("identify.start")}
           </button>
         </form>
 
         <p className="identify-footnote">
-          If you've used this platform before with the same name, you'll resume where you left off.
+          {t("identify.footnote")}
         </p>
       </div>
     </div>

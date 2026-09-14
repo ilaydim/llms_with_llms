@@ -30,6 +30,7 @@ class QuizSubmitIn(BaseModel):
     layer: str
     mcq_answers: list[MCQAnswerIn]
     open_ended_answer: str
+    lang: str = "en"  # en / tr — Evaluator Agent'ın geri bildirim dili
 
 
 class QuizResultOut(BaseModel):
@@ -47,6 +48,7 @@ class RevisitIn(BaseModel):
     module_code: str
     layer: str
     revisited: bool
+    lang: str = "en"  # en / tr — Tutor Agent'ın yeniden anlatım dili
 
 
 class RevisitOut(BaseModel):

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session as DBSession
 from app.database import get_db
 from app.models.models import ApplicationTask, Module
 from app.models.models import Session as SessionModel
-from app.services.module_loader import load_module_config
+from app.services.module_loader import get_module_content, load_module_config
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -42,7 +42,8 @@ def _ensure_tasks_exist(db: DBSession, session_id: int, module: Module) -> list[
         return existing
 
     config = load_module_config(module.code)
-    steps = config.get("application", {}).get("steps", [])
+    content = get_module_content(config)  # step_number dilden bağımsız, varsayılan dil yeterli
+    steps = content.get("application", {}).get("steps", [])
     created = []
     for step in steps:
         task = ApplicationTask(

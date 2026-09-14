@@ -17,9 +17,9 @@ router = APIRouter(prefix="/survey", tags=["survey"])
 
 
 @router.get("/questions/{survey_type}", response_model=list[SurveyQuestionOut])
-def get_questions(survey_type: str):
+def get_questions(survey_type: str, lang: str = "en"):
     try:
-        return load_survey_questions(survey_type)
+        return load_survey_questions(survey_type, lang=lang)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
