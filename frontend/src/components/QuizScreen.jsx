@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useLanguage } from "../i18n";
+import RevisitChat from "./RevisitChat";
 
 export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, onAdvanceLayer }) {
   const [quiz, setQuiz] = useState(null);
@@ -172,6 +173,7 @@ export default function QuizScreen({ sessionId, moduleCode, layer, onLeaveQuiz, 
           <div className="quiz-result">
             <p className="chat-intro-label">{t("quiz.newExplanation")}</p>
             <p className="quiz-revisit-text">{revisitExplanation}</p>
+            <RevisitChat sessionId={sessionId} moduleCode={moduleCode} layer={layer} />
             <p className="survey-question-text" style={{ marginTop: 16 }}>{t("quiz.makeSense")}</p>
             <button className="btn-primary" onClick={handleRetake}>
               {t("quiz.retake")}

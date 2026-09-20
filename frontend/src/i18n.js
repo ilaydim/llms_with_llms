@@ -85,6 +85,8 @@ export const translations = {
     "quiz.revisit.yes": "Yes, explain again",
     "quiz.newExplanation": "New explanation",
     "quiz.makeSense": "Does that make more sense?",
+    "quiz.askTutor": "Still unclear? Ask the tutor",
+    "quiz.askPlaceholder": "Ask a question about this explanation…",
     "quiz.retake": "Yes, retake the quiz",
 
     "chat.placeholder.theory": "Ask anything about RAG in your own words…",
@@ -195,6 +197,8 @@ export const translations = {
     "quiz.revisit.yes": "Evet, tekrar anlat",
     "quiz.newExplanation": "Yeni anlatım",
     "quiz.makeSense": "Şimdi daha mantıklı geldi mi?",
+    "quiz.askTutor": "Hâlâ net değil mi? Tutor'a sor",
+    "quiz.askPlaceholder": "Bu anlatımla ilgili bir soru sor…",
     "quiz.retake": "Evet, quiz'i tekrar çöz",
 
     "chat.placeholder.theory": "RAG hakkında kendi cümlelerinle istediğini sor…",

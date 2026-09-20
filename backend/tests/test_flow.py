@@ -111,3 +111,22 @@ def test_application_tasks_update(client, session_ids):
     assert steps and all(s["status"] == "not_started" for s in steps)
     r = client.patch(f"/tasks/{steps[0]['id']}", json={"status": "completed"}).json()
     assert r["status"] == "completed" and r["completed_at"]
+
+
+def test_can_ask_tutor_after_revisit_explanation(client, session_ids):
+    """FR-6.5 / UC-6 adım 4: anlatımdan sonra sorulan soru aynı katmanın geçmişine yazılır."""
+    import json
+
+    _, sid = session_ids
+    wrong = [{"question_id": a["question_id"], "selected_index": 99} for a in _correct_answers(client, "theory")]
+    assert _submit_quiz(client, sid, "theory", wrong).json()["passed"] is False
+    client.post("/quiz/revisit", json={
+        "session_id": sid, "module_code": MODULE, "layer": "theory", "revisited": True})
+
+    r = client.post("/dialogue/message/stream", json={
+        "session_id": sid, "module_code": MODULE, "layer": "theory", "content": "Can you give another example?"})
+    events = [json.loads(l[6:]) for l in r.text.split("\n\n") if l.startswith("data: ")]
+    assert events[-1].get("done") is True
+
+    senders = [m["sender"] for m in client.get(f"/dialogue/{sid}/{MODULE}/theory/history").json()]
+    assert senders == ["tutor_agent", "student", "tutor_agent"]  # anlatım, soru, cevap

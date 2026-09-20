@@ -40,7 +40,7 @@ SRS maddeleri (FR/NFR) ile karşılaştırılmıştır. Son güncelleme: 2026-09
 - ✅ Mesajlar öğrenci / tutor için net ayrışıyor (NFR-3.2)
 
 ### Bu oturumda eklenenler
-- ✅ Otomatik testler: 29 test (mock LLM, geçici veritabanı), UC-1 → UC-8 akışı dahil
+- ✅ Otomatik testler: 30 test (mock LLM, geçici veritabanı), UC-1 → UC-8 akışı dahil
 - ✅ Streaming testleri
 - ✅ Gerçek Groq ile canlı test dosyası (varsayılan olarak atlanır: `RUN_LIVE_LLM=1`)
 - ✅ Katman kilidi backend'de de zorunlu: önceki katman bitmeden mesaj, quiz, revisit `403` (`services/layer_access.py`)
@@ -58,10 +58,10 @@ SRS maddeleri (FR/NFR) ile karşılaştırılmıştır. Son güncelleme: 2026-09
 - ⚠️ **Hata mesajları (NFR-3.3).** Streaming'de stack trace sızmıyor (testli). Diğer endpoint'lerde ve arayüzde LLM hatasında gösterilen mesaj elle kontrol edilmedi.
 - ⚠️ **Responsive kontrol (NFR-5.1).** Masaüstü tarayıcılarda elle bakılmadı.
 - ⚠️ **20 eşzamanlı öğrenci (NFR-1.2).** Hiç ölçülmedi. Groq ücretsiz katman limitleri de aşılabilir (SRS 2.5: istek sayısı izlenmeli).
-- ⚠️ **"Geri dön" akışı (FR-6.5 / UC-6) eksik.** Kodu okuyarak kontrol ettim:
+- ⚠️ **"Geri dön" akışı (FR-6.5 / UC-6) kısmen eksik.** Kodu okuyarak kontrol ettim:
   - ✅ Daha basit, gerçek dünya örnekli farklı anlatım üretiliyor ([tutor_agent.py](backend/app/agents/tutor_agent.py) `generate_simplified_explanation`)
   - ⚠️ "Şimdi anladın mı?" sorusu var (LLM'e sonda sormak talimatı + arayüzde sabit metin), ama cevabı kimse okumuyor, sadece bir "Tekrar dene" butonu var
-  - ❌ **Öğrenci yeni anlatım üzerine soru soramıyor.** Anlatım quiz ekranında gösteriliyor ve orada sohbet kutusu yok; tek seçenek quizi yeniden çözmek. SRS "öğrenciye soru sorma imkânı tanımalı" diyor.
+  - ✅ Öğrenci yeni anlatım üzerine Tutor'a soru sorabiliyor ([RevisitChat.jsx](frontend/src/components/RevisitChat.jsx), quiz ekranında). Backend akışı testli; Gerçek tarayıcıda (Chrome, mock LLM) masaüstü ve 390px genişlikte uçtan uca denendi: yanlış quiz → "Yes, explain again" → soru sor → cevap akıyor → "retake" butonu yerinde, konsol hatası yok.
   - ❌ **"Benzer ama farklı bir soru" yok.** "Tekrar dene" aynı soruları (aynı id'ler) yeniden getiriyor ([QuizScreen.jsx](frontend/src/components/QuizScreen.jsx) `handleRetake`). Öğrenci cevapları ezberleyebilir; ölçüm geçerliliğini bozar. Çözüm için `rag.json`'a her katman için ikinci bir soru seti (TR + EN) yazılması ve `attempt_number > 1` iken onun sunulması gerekiyor. İçerik yazımı gerektiriyor.
 
 ### Karar bekleyenler
@@ -77,8 +77,9 @@ SRS maddeleri (FR/NFR) ile karşılaştırılmıştır. Son güncelleme: 2026-09
 - ❌ Anket puanlarını hesaplayan yardımcı (Likert maddelerinin toplam/ortalaması)
 
 ### Sağlamlık / temizlik
+- ❌ **Mesaj saatleri yanlış gösteriliyor (mevcut hata).** Backend `created_at` değerini UTC olarak ama saat dilimi bilgisi olmadan döndürüyor (`2026-09-20T13:52:12`, sonunda `Z` yok). Tarayıcı bunu yerel saat sanıyor; Türkiye'de Tutor mesajları 3 saat geri, öğrenci mesajı (tarayıcı saatiyle) doğru görünüyor. Sohbet ekranında da aynı. Çözüm: backend'de tarihleri `Z` ile serileştirmek (ya da frontend'de UTC olarak ayrıştırmak). Araştırma verisini etkilemez (DB'de UTC doğru), sadece görüntüyü.
 - ⚠️ Kimlik doğrulama yok: `/analytics/student/{id}` ve `/progress/student/{id}` id'yi bilen herkese açık. SRS MVP'de şifresiz istiyor (Faz 2'de kalkacak), ama canlıya çıkmadan önce bilinmeli.
-- ⚠️ NFR-2.1 (veri üçüncü taraflarla paylaşılmamalı): öğrenci mesajları LLM sağlayıcısına (Groq) gidiyor. Onam metninde belirtildiğinden emin olun.
+- ⚠️ NFR-2.1 (veri üçüncü taraflarla paylaşılmamalı): öğrenci mesajları LLM sağlayıcısına (Groq) gidiyor. Onam metni (`consent.data.item2`) sadece "Tutor Agent ile diyalog mesajlarınız" diyor; mesajların üçüncü taraf bir LLM sağlayıcısına gönderildiğini belirtmiyor. Metne eklenmesi gerekebilir.
 - ❌ `on_event("startup")` ve class-based Pydantic `Config` için deprecation uyarıları (zararsız, ileride kırılabilir)
 - ❌ [progress.py](backend/app/routers/progress.py) içindeki işe yaramayan koşul: `current_view = "chat" if in_progress_row else "chat"`
 - ❌ README güncel tutulmalı; İlayda'nın [docs/STATUS_REPORT.md](docs/STATUS_REPORT.md) dosyası ile birleştirilebilir
