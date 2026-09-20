@@ -167,8 +167,11 @@ frontend/
 
 ## Sıradaki Adımlar
 
-- [ ] Otomatik testler (şu an `backend/tests` yok; akış elle test edildi)
-- [ ] Gerçek LLM (Groq) ile uçtan uca pilot denemesi
+- [x] Otomatik testler: `backend/tests` (mock LLM, geçici DB). Çalıştırmak için: `pip install -r requirements-dev.txt && pytest`
+- [x] Streaming (SSE) testleri ve Groq canlı duman testleri (`RUN_LIVE_LLM=1 pytest tests/test_live_llm.py`)
+- [ ] **Katman kilitlemeyi backend'de zorunlu kıl:** şu an sadece frontend'de (`App.jsx` `getUnlockedLayers`). `/dialogue/*` ve `/quiz/submit` doğrudan API'den çağrılarak kilit atlanabiliyor. Sonra test ekle.
+- [ ] Gerçek LLM ile uçtan uca pilot denemesi (tüm akış, gerçek öğrenci senaryosu)
+- [ ] `.env.example`'daki varsayılan Groq modelini güncelle; Groq model kataloğu değişiyor (`gemma2-9b-it` kaldırıldı, `llama-3.3-70b-versatile` bazı hesaplarda erişilemiyor). Çalışan örnek: `openai/gpt-oss-120b`
 - [ ] Hata mesajlarının (NFR-3.3) ve responsive görünümün son kontrolü
 - [ ] Learning analytics (FR-7.1/7.2): konu bazlı mesaj sayısı özeti
 
