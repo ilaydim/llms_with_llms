@@ -16,7 +16,7 @@ from app.models.models import Student
 
 router = APIRouter(prefix="/progress", tags=["progress"])
 
-LAYER_ORDER = ["theory", "application", "critical"]
+from app.services.layer_access import LAYER_ORDER, require_layer_unlocked
 
 
 class StudentProgressOut(BaseModel):
@@ -148,7 +148,7 @@ def update_layer_status(
     """
     FR-7.2: Katman durumunu günceller.
     - in_progress: öğrenci bu katmana girdi (dialogue router çağırır)
-    - completed: öğrenci bu katmanı geçti (quiz router çağırır)
+    - completed: BU ENDPOINT'TEN KABUL EDİLMEZ; sadece quiz router işaretler
     - abandoned: oturum kapandı ama katman bitmedi
     """
     if layer not in LAYER_ORDER:
@@ -164,6 +164,10 @@ def update_layer_status(
     if module is None:
         raise HTTPException(status_code=404, detail=f"Modül bulunamadı: {module_code}")
 
+    require_layer_unlocked(db, session_id, module.id, layer)
+    if payload.status == "completed":
+        # Katman yalnızca quiz'den (quiz.py) tamamlanır; buradan işaretlenirse quiz atlanabilir.
+        raise HTTPException(status_code=400, detail="Katman bu endpoint'ten tamamlanamaz; quiz'i geç.")
     row = _get_or_create_layer_progress(db, session_id, module.id, layer)
     row.status = payload.status
     if payload.status == "completed":

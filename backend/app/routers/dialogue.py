@@ -14,6 +14,7 @@ from app.database import SessionLocal, get_db
 from app.models.models import DialogueMessage, LayerProgress, Module
 from app.models.models import Session as SessionModel
 from app.schemas.dialogue import DialogueMessageIn, DialogueMessageOut, LayerIntroOut
+from app.services.layer_access import is_layer_unlocked, require_layer_unlocked
 from app.services.session_activity import touch_session
 
 router = APIRouter(prefix="/dialogue", tags=["dialogue"])
@@ -69,6 +70,7 @@ def send_message(payload: DialogueMessageIn, db: DBSession = Depends(get_db)):
     """
     module = _get_module(db, payload.module_code)
     session = _get_session(db, payload.session_id)
+    require_layer_unlocked(db, payload.session_id, module.id, payload.layer)
 
     # Önceki konuşma geçmişini bağlam olarak hazırla
     history_rows = (
@@ -161,6 +163,9 @@ def send_message_stream(payload: DialogueMessageIn):
             session = db.query(SessionModel).filter(SessionModel.id == payload.session_id).first()
             if not module or not session:
                 yield f"data: {json.dumps({'error': 'Oturum veya modül bulunamadı'})}\n\n"
+                return
+            if not is_layer_unlocked(db, payload.session_id, module.id, payload.layer):
+                yield f"data: {json.dumps({'error': 'Bu katman henüz kilitli.', 'locked': True})}\n\n"
                 return
 
             history_rows = (

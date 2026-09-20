@@ -22,6 +22,7 @@ from app.schemas.quiz import (
     RevisitOut,
 )
 from app.services.module_loader import get_module_content, load_module_config
+from app.services.layer_access import require_layer_unlocked
 from app.services.session_activity import touch_session
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -80,6 +81,7 @@ def submit_quiz(payload: QuizSubmitIn, db: DBSession = Depends(get_db)):
     session = db.query(SessionModel).filter(SessionModel.id == payload.session_id).first()
     if session is None:
         raise HTTPException(status_code=404, detail="Oturum bulunamadı")
+    require_layer_unlocked(db, payload.session_id, module.id, payload.layer)
 
     module_config = load_module_config(payload.module_code)
     content = get_module_content(module_config, payload.lang)
@@ -160,6 +162,7 @@ def revisit(payload: RevisitIn, db: DBSession = Depends(get_db)):
     session = db.query(SessionModel).filter(SessionModel.id == payload.session_id).first()
     if session is None:
         raise HTTPException(status_code=404, detail="Oturum bulunamadı")
+    require_layer_unlocked(db, payload.session_id, module.id, payload.layer)
 
     # FR-6.7: geri dönüş kaydı
     db.add(

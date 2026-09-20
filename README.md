@@ -169,7 +169,7 @@ frontend/
 
 - [x] Otomatik testler: `backend/tests` (mock LLM, geçici DB). Çalıştırmak için: `pip install -r requirements-dev.txt && pytest`
 - [x] Streaming (SSE) testleri ve Groq canlı duman testleri (`RUN_LIVE_LLM=1 pytest tests/test_live_llm.py`)
-- [ ] **Katman kilitlemeyi backend'de zorunlu kıl:** şu an sadece frontend'de (`App.jsx` `getUnlockedLayers`). `/dialogue/*` ve `/quiz/submit` doğrudan API'den çağrılarak kilit atlanabiliyor. Sonra test ekle.
+- [x] Katman kilidi backend'de de zorunlu (`services/layer_access.py`): önceki katman tamamlanmadan mesaj, quiz, revisit ve progress PATCH `403` döner; okuma serbest. `PATCH /progress` ile `completed` işaretlenemez (`400`), katman yalnızca quiz ile tamamlanır. Kural tek yerde, değiştirmek için sadece o dosya.
 - [ ] Gerçek LLM ile uçtan uca pilot denemesi (tüm akış, gerçek öğrenci senaryosu)
 - [ ] `.env.example`'daki varsayılan Groq modelini güncelle; Groq model kataloğu değişiyor (`gemma2-9b-it` kaldırıldı, `llama-3.3-70b-versatile` bazı hesaplarda erişilemiyor). Çalışan örnek: `openai/gpt-oss-120b`
 - [ ] Hata mesajlarının (NFR-3.3) ve responsive görünümün son kontrolü

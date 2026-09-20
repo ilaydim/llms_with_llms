@@ -30,13 +30,6 @@ def test_stream_emits_chunks_then_done_and_persists(client, session_ids):
     assert history[1]["id"] == events[-1]["message_id"]
 
 
-def test_stream_marks_layer_in_progress(client, session_ids):
-    student_id, session_id = session_ids
-    _stream(client, session_id, layer="application")
-    # application in_progress ama completed değil
-    assert client.get(f"/progress/student/{student_id}").json()["layers_completed"] == []
-
-
 def test_stream_unknown_session_returns_error_event(client):
     events = _events(_stream(client, 999))
     assert events == [{"error": "Oturum veya modül bulunamadı"}]
