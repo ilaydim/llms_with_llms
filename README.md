@@ -173,7 +173,7 @@ frontend/
 - [ ] Gerçek LLM ile uçtan uca pilot denemesi (tüm akış, gerçek öğrenci senaryosu)
 - [ ] `.env.example`'daki varsayılan Groq modelini güncelle; Groq model kataloğu değişiyor (`gemma2-9b-it` kaldırıldı, `llama-3.3-70b-versatile` bazı hesaplarda erişilemiyor). Çalışan örnek: `openai/gpt-oss-120b`
 - [ ] Hata mesajlarının (NFR-3.3) ve responsive görünümün son kontrolü
-- [ ] Learning analytics (FR-7.1/7.2): konu bazlı mesaj sayısı özeti
+- [x] Learning analytics (FR-7.1/7.2/7.3): `GET /analytics/student/{id}` (katman bazlı mesaj sayısı, durum, quiz denemesi, geri dönüş, aktif süre) ve `GET /analytics/summary` (anonim ortalama/medyan). Oturum kapanınca `in_progress` katmanlar `abandoned` olur.
 
 ## Bilinen Sınırlamalar / Sıradaki Kararlar
 

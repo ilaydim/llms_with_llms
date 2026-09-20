@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session as DBSession
 
+from app.models.models import LayerProgress
 from app.models.models import Session as SessionModel
 
 ACTIVE_GAP_THRESHOLD_SECONDS = 120  # 2 dakika
@@ -36,6 +37,10 @@ def close_session(db: DBSession, session_id: int) -> SessionModel | None:
     if session is None:
         return None
     session.ended_at = datetime.now(timezone.utc)
+    # FR-7.2: oturum kapanırken bitmemiş (in_progress) katmanlar "bırakıldı" olarak işaretlenir
+    db.query(LayerProgress).filter(
+        LayerProgress.session_id == session_id, LayerProgress.status == "in_progress"
+    ).update({"status": "abandoned"})
     db.commit()
     db.refresh(session)
     return session

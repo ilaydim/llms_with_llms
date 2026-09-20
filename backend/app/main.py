@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import get_settings
 from app.database import Base, SessionLocal, engine
 from app.models.models import Module
-from app.routers import dialogue, progress, quiz, sessions, students, survey, tasks
+from app.routers import analytics, dialogue, progress, quiz, sessions, students, survey, tasks
 
 settings = get_settings()
 
@@ -98,6 +98,7 @@ app.include_router(quiz.router)
 app.include_router(survey.router)
 app.include_router(progress.router)
 app.include_router(tasks.router)
+app.include_router(analytics.router)
 
 # Serve the built React frontend (production).
 # Build: cd frontend && npm run build
