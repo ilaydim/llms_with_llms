@@ -23,8 +23,11 @@ from typing import Any, Callable
 from app.core.config import get_settings
 
 
-def _with_retry(fn, max_attempts: int = 2, delay: float = 1.0):
-    """NFR-4.2: LLM API'den hata dönerse en az 1 kez otomatik yeniden dener."""
+def _with_retry(fn, max_attempts: int = 5, delay: float = 1.0):
+    """NFR-4.2: LLM API'den hata dönerse yeniden dener. 429 rate-limit için bekleme süresini
+    hata mesajından okur; diğer hatalar için üstel geri çekilme uygular."""
+    import re as _re
+
     last_exc: Exception | None = None
     for attempt in range(max_attempts):
         try:
@@ -32,7 +35,13 @@ def _with_retry(fn, max_attempts: int = 2, delay: float = 1.0):
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
             if attempt < max_attempts - 1:
-                time.sleep(delay)
+                wait = delay * (2 ** attempt)
+                # 429 mesajındaki "try again in Xs" ifadesinden bekleme süresini çıkar
+                msg = str(exc)
+                match = _re.search(r"try again in (\d+(?:\.\d+)?)s", msg)
+                if match:
+                    wait = float(match.group(1)) + 1.0
+                time.sleep(wait)
     raise last_exc
 
 
