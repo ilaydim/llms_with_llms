@@ -58,7 +58,11 @@ SRS maddeleri (FR/NFR) ile karşılaştırılmıştır. Son güncelleme: 2026-09
 - ⚠️ **Hata mesajları (NFR-3.3).** Streaming'de stack trace sızmıyor (testli). Diğer endpoint'lerde ve arayüzde LLM hatasında gösterilen mesaj elle kontrol edilmedi.
 - ⚠️ **Responsive kontrol (NFR-5.1).** Masaüstü tarayıcılarda elle bakılmadı.
 - ⚠️ **20 eşzamanlı öğrenci (NFR-1.2).** Hiç ölçülmedi. Groq ücretsiz katman limitleri de aşılabilir (SRS 2.5: istek sayısı izlenmeli).
-- ⚠️ **"Geri dön" akışının tamamı (FR-6.5).** Daha basit anlatım üretiliyor; "şimdi anladın mı?" kontrolü ve benzer soruyla yeniden ölçme adımlarını kodda doğrulamadım.
+- ⚠️ **"Geri dön" akışı (FR-6.5 / UC-6) eksik.** Kodu okuyarak kontrol ettim:
+  - ✅ Daha basit, gerçek dünya örnekli farklı anlatım üretiliyor ([tutor_agent.py](backend/app/agents/tutor_agent.py) `generate_simplified_explanation`)
+  - ⚠️ "Şimdi anladın mı?" sorusu var (LLM'e sonda sormak talimatı + arayüzde sabit metin), ama cevabı kimse okumuyor, sadece bir "Tekrar dene" butonu var
+  - ❌ **Öğrenci yeni anlatım üzerine soru soramıyor.** Anlatım quiz ekranında gösteriliyor ve orada sohbet kutusu yok; tek seçenek quizi yeniden çözmek. SRS "öğrenciye soru sorma imkânı tanımalı" diyor.
+  - ❌ **"Benzer ama farklı bir soru" yok.** "Tekrar dene" aynı soruları (aynı id'ler) yeniden getiriyor ([QuizScreen.jsx](frontend/src/components/QuizScreen.jsx) `handleRetake`). Öğrenci cevapları ezberleyebilir; ölçüm geçerliliğini bozar. Çözüm için `rag.json`'a her katman için ikinci bir soru seti (TR + EN) yazılması ve `attempt_number > 1` iken onun sunulması gerekiyor. İçerik yazımı gerektiriyor.
 
 ### Karar bekleyenler
 - ❌ **Quiz geçme eşiği (FR-6.4, SRS'te TBD).** Şu an `0.6·çoktan seçmeli + 0.4·açık uçlu ≥ 0.7`, ekip onaylamalı.
