@@ -12,7 +12,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# .env içine kendi ANTHROPIC_API_KEY'ini gir
+# .env içine kullanacağın sağlayıcının API anahtarını gir (veya LLM_PROVIDER=mock)
 
 uvicorn app.main:app --reload
 ```
@@ -84,9 +84,9 @@ backend/
       quiz.py                 # UC-5/6/7 — quiz + mastery learning
       survey.py                # UC-1/UC-8 — pre/post anket
     agents/
-      llm_client.py          # Sağlayıcı-bağımsız LLM katmanı (mock/anthropic/openai)
+      llm_client.py          # Sağlayıcı-bağımsız LLM katmanı (mock/groq/anthropic/openai)
       tutor_agent.py          # Bölüm 5.4/5.5 — Tutor Agent
-      evaluator_agent.py       # Bölüm 5.4 — Evaluator Agent (FR-6.3, artık bağlı)
+      evaluator_agent.py       # Bölüm 5.4 — Evaluator Agent (FR-6.3)
     services/
       module_loader.py        # FR-1.1/1.3 — modül config okuma + tutor prompt üretimi
       document_search.py       # FR-4.1 — "doküman ara" aracı (gerçek semantik arama)
@@ -156,25 +156,29 @@ frontend/
 ✓ eleştirel katman diyaloğu  ✓ eleştirel quiz'i  ✓ post-anket
 ```
 
+**Gün 6 ve sonrası**
+- [x] Streaming diyalog yanıtları
+- [x] Katman kilitleme (önceki katman geçilmeden sonrakine girilemez) ve ilerleme takibi (`/progress/*`)
+- [x] Uygulama görevi adım takibi (`/tasks/*`, `application_tasks` tablosu — FR-4.3)
+- [x] Onam (consent) ekranı; TR/EN dil değiştirme (`i18n`)
+- [x] Groq LLM sağlayıcısı; 429 rate-limit'te bekleme süresini okuyan, en fazla 5 denemeli retry (NFR-4.2)
+- [x] Araştırma verisi CSV export'u (`python export_data.py`)
+- [x] Railway deploy ayarları (`railway.json`, `nixpacks.toml`) ve Vite dev proxy
+
 ## Sıradaki Adımlar
 
-| Gün | İş |
-|---|---|
-| 6 | Learning analytics: FR-7.1/7.2 (konu bazlı mesaj sayısı, katman ilerleme durumu) için sorgu/özet endpoint'i; `application_tasks` ilerleme takibinin UC-3 ile tam entegrasyonu; FR-3.4 otomatik katman geçiş kriterinin netleştirilmesi |
-| 7 | Genel cilalama: hata mesajları (NFR-3.3), responsive son kontrol, pilot teste hazırlık, `.env`'de gerçek LLM API'sine geçiş denemesi |
+- [ ] Otomatik testler (şu an `backend/tests` yok; akış elle test edildi)
+- [ ] Gerçek LLM (Groq) ile uçtan uca pilot denemesi
+- [ ] Hata mesajlarının (NFR-3.3) ve responsive görünümün son kontrolü
+- [ ] Learning analytics (FR-7.1/7.2): konu bazlı mesaj sayısı özeti
 
 ## Bilinen Sınırlamalar / Sıradaki Kararlar
 
-- **Quiz geçme eşiği (FR-6.4, SRS'te "TBD"):** Şu an `mcq_score*0.6 + open_ended_score*0.4 ≥ 0.7` formülü kullanılıyor (`.env`'de `QUIZ_PASS_THRESHOLD`). Bu varsayımı ekip olarak gözden geçirmek gerekir.
-- **Katman geçişi (FR-3.4):** Şu an öğrenci "Quiz'e geç" butonuna manuel basıyor (UC-2 adım 6'daki "öğrenci 'devam et' seçeneğiyle" tanımına uygun). Otomatik tetikleme (örn. belirli mesaj sayısından sonra) henüz yok.
-- **Uygulama görevi adım takibi (FR-4.3, `application_tasks` tablosu):** Veri modeli hazır ama henüz hiçbir endpoint bu tabloyu güncellemiyor — Gün 6'da ele alınacak.
+- **Quiz geçme eşiği (FR-6.4, SRS'te "TBD"):** Şu an `mcq_score*0.6 + open_ended_score*0.4 ≥ 0.7` formülü kullanılıyor (`.env`'de `QUIZ_PASS_THRESHOLD`). Ekip olarak gözden geçirilmeli.
+- **Katman geçişi (FR-3.4):** Öğrenci "Quiz'e geç" butonuna manuel basıyor; otomatik tetikleme yok.
 
-## LLM API'sini Bağlama (karar verince)
+## LLM API'sini Bağlama
 
-`.env` dosyasında:
-```
-LLM_PROVIDER=anthropic   # veya openai
-ANTHROPIC_API_KEY=sk-ant-...
-```
-Agent kodlarına (`tutor_agent.py`, `evaluator_agent.py`) hiç dokunmana gerek yok —
-hepsi `llm_client.py`'daki ortak `LLMClient` arayüzü üzerinden konuşuyor.
+`backend/.env` içinde `LLM_PROVIDER` değerini seç (`mock`, `groq`, `anthropic`, `openai`) ve ilgili anahtarı gir
+(`GROQ_API_KEY`, `ANTHROPIC_API_KEY` veya `OPENAI_API_KEY`). Model adları `TUTOR_MODEL` / `EVALUATOR_MODEL` ile
+ayarlanır. Agent kodlarına dokunmak gerekmez; hepsi `llm_client.py`'daki ortak `LLMClient` arayüzünü kullanır.
